@@ -1,0 +1,31 @@
+;;;
+;;;
+;;;
+"
+#include \"gauche/uvector.h\"
+#define DGELS dgels_
+"
+;;;
+;;;
+;;;
+(define-type <f64vector> "ScmF64Vector*")
+
+;;;
+;;;
+;;;
+(define-cproc dgels (T::<char> M::<int> N::<int> NRHS::<int>
+                     A::<f64vector> LDA::<int>
+                     B::<f64vector> LDB::<int>
+                     W::<f64vector> LW::<int>)
+   (body <int>                     
+"
+   char TT;
+    TT=T;
+    DGELS(&TT, &M, &N, &NRHS, 
+          SCM_UVECTOR_ELEMENTS(A), &LDA, 
+          SCM_UVECTOR_ELEMENTS(B), &LDB, 
+          SCM_UVECTOR_ELEMENTS(W), &LW, &SCM_RESULT);
+"
+   ))
+
+;; EOF

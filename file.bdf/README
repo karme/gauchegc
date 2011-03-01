@@ -1,0 +1,13 @@
+This directory contains Gauche module to read BDF file,
+which widly used as source of X11 font.  To run example
+programs, you need at least ``a14.bdf'' under bdf subdirectory.
+Files a14.bdf and k14 can easily found on the Web, or
+you can even generate from your X11 font server if you have
+an access. For example,
+
+    % mkdir bdf
+    % fstobdf -server "tcp/localhost:7100" -fn a14 > bdf/a14.bdf
+
+;;; EOF
+
+

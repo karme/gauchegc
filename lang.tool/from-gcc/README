@@ -1,0 +1,14 @@
+This file is a part of Gauche Garbage Collection.
+
+Redistribution Note:
+
+File c-parse.in is copied from GNU Compiler Collection's CVS Jul-11-2004.
+All files except c-lex.l in this directory should be redistributed 
+unter GNU General Public Licence. See COPYING for detail.
+
+File c-lex.l is derived from USENET article, I think it's public domain.
+
+                                   Shigenobu Kimura <skimu@mac.com>
+
+
+

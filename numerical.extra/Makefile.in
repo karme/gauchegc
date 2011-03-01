@@ -1,0 +1,93 @@
+#
+# $Id: Makefile.in,v 1.3 2005/11/05 17:02:57 skimu Exp $
+#
+
+SHELL       = @SHELL@
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+libdir      = @libdir@
+VPATH       = $(srcdir)
+
+# These may be overridden by make invocators
+DESTDIR  =
+OPTFLAGS = @OPTFLAGS@
+CC       = @CC@
+LIBS     = @LIBS@
+CFLAGS   = @CFLAGS@ 
+LDFLAGS  = @LDFLAGS@
+INSTALL_TYPE = @INSTALL_TYPE@
+
+# Set by configure
+GOSH     = @GOSH@
+GAUCHE_CONFIG = @GAUCHE_CONFIG@
+OBJEXT   = @OBJEXT@
+DSOEXT   = @SOEXT@
+
+INSTALL  = @GAUCHE_INSTALL@
+
+###
+###
+###
+MODULE    = ggc.numerical.extra
+DSOBASE   = ggcnumextra
+SCMFILES  = extra.scm
+STUBBASE  = ggc-numerical-extra
+HEADERS   = 
+OBJS      = $(DSOBASE)_head.$(OBJEXT) \
+            ggcnumextra.$(OBJEXT)     \
+            grand.$(OBJEXT)           \
+	    $(STUBBASE).$(OBJEXT)     \
+            $(DSOBASE)_tail.$(OBJEXT)
+###
+###
+###
+
+TARGET    = $(ARCHFILES)
+ARCHFILES = $(DSOBASE).$(DSOEXT)
+GENERATED = $(STUBBASE).c $(DSOBASE)_head.c $(DSOBASE)_tail.c
+CONFIG_GENERATED = Makefile config.cache config.log config.status \
+		   configure.lineno autom4te*.cache $(MODULE).gpd
+
+HEADER_INSTALL_DIR  = $(DESTDIR)`$(GAUCHE_CONFIG) --$(INSTALL_TYPE)incdir`
+SCM_INSTALL_DIR     = $(DESTDIR)`$(GAUCHE_CONFIG) --$(INSTALL_TYPE)libdir`/ggc/numerical
+GPD_INSTALL_DIR     = $(DESTDIR)`$(GAUCHE_CONFIG) --$(INSTALL_TYPE)libdir`/.packages
+ARCH_INSTALL_DIR    = $(DESTDIR)`$(GAUCHE_CONFIG) --$(INSTALL_TYPE)archdir`
+
+all : $(TARGET)
+
+.SUFFIXES: .o .stub
+
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.stub.c:
+	$(GOSH) genstub $<
+
+$(STUBBASE).c : $(STUBBASE).stub
+
+$(DSOBASE).$(DSOEXT): $(OBJS)
+	$(CC) $(LDFLAGS) $(DSOBASE).$(DSOEXT) $(OBJS) $(LIBS)
+
+$(DSOBASE)_head.c $(DSOBASE)_tail.c :
+	$(GAUCHE_CONFIG) --fixup-extension $(DSOBASE)
+
+check : all
+	@rm -f test.log
+	$(GOSH) -I. test.scm > test.log
+
+install : all
+	$(INSTALL) -m 444 -T $(HEADER_INSTALL_DIR) $(HEADERS)
+	$(INSTALL) -m 444 -T $(SCM_INSTALL_DIR) $(SCMFILES) 
+	$(INSTALL) -m 555 -T $(ARCH_INSTALL_DIR) $(ARCHFILES)
+	$(INSTALL) -m 444 -T $(GPD_INSTALL_DIR) $(MODULE).gpd
+
+clean :
+	rm -rf core $(TARGET) $(OBJS) $(GENERATED) *~ test.log so_locations test*.dat
+
+distclean : clean
+	rm -rf $(CONFIG_GENERATED)
+
+maintainer-clean : clean
+	rm -rf $(CONFIG_GENERATED) configure
+

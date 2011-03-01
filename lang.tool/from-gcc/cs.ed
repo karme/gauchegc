@@ -1,0 +1,47 @@
+g/^[ 	]*$/d
+g/'('/s//LPAREN/g
+g/')'/s//RPAREN/g
+g/'{'/s//LCBRA/g
+g/'}'/s//RCBRA/g
+g/'\['/s//LSBRA/g
+g/'\]'/s//RSBRA/g
+g/';'/s//SEMICOLON/g
+g/':'/s//COLON/g
+g/','/s//COMMA/g
+g/'|'/s//OR/g
+g/'\.'/s// DOT /g
+g/'='/s// = /g
+g/'%'/s// % /g
+g/'?'/s// ? /g
+g/'&'/s// \& /g
+g/'^'/s// ^ /g
+g/'+'/s// + /g
+g/'\-'/s// - /g
+g/'\/'/s// \/ /g
+g/'\*'/s// * /g
+g/'~'/s// ~ /g
+g/'!'/s// ! /g
+1,/^%%$/s/^\(%expect\)\(.*\)$/(expect: \2)/
+1,/^%%$/s/^\(%start\)\(.*\)$/(start: \2)/
+1,/^%%$/s/^\(%right\)\(.*\)$/(right: \2)/
+1,/^%%$/s/^\(%left\)\(.*\)$/(left: \2)/
+1,/^%%$/s/^\(%nonassoc\)\(.*\)$/(nonassoc: \2)/
+1
+/%token/i
+(ID
+.
+1,/^%%$/s/^%token//
+1i
+(define c-parse
+  (lalr-parser 
+.
+/%%/i
+)
+.
+$a
+))
+
+;; EOF
+.
+w
+q

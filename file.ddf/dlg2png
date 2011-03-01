@@ -1,0 +1,146 @@
+#!/usr/bin/env gosh
+;; -*-Scheme-*-
+(use srfi-1)
+(use ggc.file.util)
+(use ggc.file.ddf)
+(use ggc.file.ddf-sdts-dlg)
+(use ggc.skimu.frame-buffer)
+
+(define IMAGE-WIDTH 1600)
+
+;;;
+;;;
+;;;
+(define (make-canvas sdts layer)
+
+  ;; point : used for both SADR and fb coordinate.
+  (define (point-x pt) (car pt))
+  (define (point-y pt) (cadr pt))
+  (define (make-point x y) (list x y))
+    
+  (define (mmx f pts)
+    (apply f (map (lambda (pt) (point-x pt)) pts)))
+
+  (define (mmy f pts)
+    (apply f (map (lambda (pt) (point-y pt)) pts)))
+
+  (define (make-proj fx fy x1 y1 x2 y2)
+    (lambda (pt)
+      (make-point
+       (* fx (- (point-x pt) x1))
+       (* fy (- y2 (point-y pt))))))
+
+  (define (calproj pts)
+    (let ((x1 (mmx min pts))
+          (y1 (mmy min pts))
+          (x2 (mmx max pts))
+          (y2 (mmy max pts)))
+
+      (let* ((h  (inexact->exact 
+                  (ceiling (* (/ (- y2 y1) (- x2 x1)) IMAGE-WIDTH))))
+             (fx (/ IMAGE-WIDTH (- x2 x1)))
+             (fy (/ h (- y2 y1))))
+
+        (values IMAGE-WIDTH
+                h
+                (make-proj fx fy x1 y1 x2 y2)))))
+
+  (define (calculate-projection)
+    (receive (ddr drs) 
+        (sdts/dlg-read sdts (string-append layer "NP01.DDF"))
+      ;; NP01 module have four SADRs each of which represents
+      ;; a point, i.e., (x y)
+      (calproj (map (lambda (dr)
+                      (ddf-get-value 'SADR dr ddr))
+                    drs))))
+
+  (define (make-dispatcher fb proj)
+    (lambda (m)
+      (case m
+        ((line)
+         (lambda (s r g b)
+           (let lp ((s (cdr s))
+                    (p1 (proj (car s))))
+             (cond 
+              ((null? s)  #t)
+              (else
+               (let ((p2 (proj (car s))))
+                 (fb-draw-line! fb
+                                (point-x p1) (point-y p1)
+                                (point-x p2) (point-y p2)
+                                r g b)
+                 (lp (cdr s) 
+                     (proj (car s)))))))))
+        ((fb) fb)
+        ((save)
+         (lambda (fname)
+           (save-frame-buffer-as-png-file fb fname)))
+        (else
+         (error "unknown command" m)))))
+
+  (receive (w h proj) (calculate-projection)
+    (let ((fb (make-frame-buffer w h)))
+      (make-dispatcher fb proj))))
+      
+(define (layer->r&g&b layer)
+  (cond 
+   ((string=? "HP01" layer) (values 0 255 0))     ; HYPSOGRAPHY
+   ((string=? "HY01" layer) (values 0 0 255))     ; HYDROGRAPHY
+   ((string=? "SC01" layer) (values 0 255 0))     ; VEG SURFACE COVER
+   ((string=? "NV01" layer) (values 10 10 10))    ; NON-VEG FREATURES
+   ((string=? "BD01" layer) (values 255 0 0))     ; BOUNDARY
+   ((string=? "SM01" layer) (values 255 255 0))   ; SURVEY CONTROL
+   ((string=? "RD01" layer) (values 0 0 0))       ; ROADS AND TRAILS
+   ((string=? "RR01" layer) (values 0 0 0))       ; RAILROADS
+   ((string=? "MT01" layer) (values 0 0 0))       ; PIPE&TRANS LINES
+   ((string=? "MS01" layer) (values 40 40 40))    ; MANDATE FEATURES
+   ((string=? "PL01" layer) (values 0 0 0))       ; PUBLIC LAND SURVEYS
+   (else (values 0 0 0))))
+
+;;;
+;;;
+;;;
+(define (draw-layer canvas sdts layer)
+
+  (define (get-files mod)
+    (filter (lambda (x)
+              (string-scan x (string-append layer mod)))
+            (sdts/dlg-files sdts)))
+
+  ;;(format #t "drawing ~a~%" layer)
+
+  (for-each 
+   (lambda (file)
+     (format #t "drawing ~a~%" file)
+     (receive (ddr drs) (sdts/dlg-read sdts file)
+       (receive (r g b) (layer->r&g&b layer)
+         (for-each 
+          (lambda (dr)
+            ((canvas 'line) (ddf-get-value 'SADR dr ddr) r g b))
+          drs))))
+   (get-files "LE")))
+
+(define (sdts/dlg->png name)
+  (let* ((sdts (make-sdts/dlg name))
+         (layers (sdts/dlg-layers sdts #t)))
+    
+    ;; XXX We make canvas according to the first layer found blindly
+    (let ((canvas (make-canvas sdts (car layers))))
+
+      (for-each 
+       (lambda (layer)
+         (draw-layer canvas sdts layer))
+       layers)
+      
+      ((canvas 'save) (string-append (basename name ".tar.gz") ".png"))
+
+      )))
+
+;;;
+;;;
+;;;
+(define (main args)
+  (if (= (length args) 2)
+      (sdts/dlg->png (cadr args))
+      (errorf "usage: ~a dir-or-tgz" (car args))))
+;; EOF

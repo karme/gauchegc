@@ -1,0 +1,55 @@
+;;;
+;;;
+;;;
+"
+#include \"gauche/uvector.h\"
+"
+;;;
+;;;
+;;;
+(define-type <f64vector> "ScmF64Vector*")
+
+;;;
+;;;
+;;;
+(define-cproc fftn (ldims::<list> Re::<f64vector> Im::<f64vector>
+                    iSign::<int> scaling::<double>)
+  (body <int>
+"
+#define FFT_MAX_DIM 5  /* Who wants 5 or more dimensions for fft? */
+    int i, r, n, dims[(FFT_MAX_DIM+1)]; 
+
+    n = Scm_Length(ldims);
+    if (n > FFT_MAX_DIM)
+        SCM_RETURN(SCM_FALSE); /* should rise an error */
+    for (i=0; i < n; i++)
+        dims[i] = SCM_INT_VALUE(Scm_ListRef(ldims, i, SCM_UNBOUND));
+    dims[i] = 0;
+#undef FFT_MAX_DIM
+    SCM_RESULT = fftn(0, dims, 
+                      SCM_UVECTOR_ELEMENTS(Re), 
+                      SCM_UVECTOR_ELEMENTS(Im),
+                      iSign, scaling);
+"
+  ))
+
+(define-cproc fftn_free () (call <void> "fft_free"))
+
+"
+#include <gauche.h>
+#include <gauche/extend.h>
+
+void Scm_Init_fftnlib(ScmModule *module);
+
+ScmObj Scm_Init_ggcnumfftn(void)
+{
+    ScmModule *mod;
+
+    SCM_INIT_EXTENSION(ggcnumfftn);
+    mod = SCM_MODULE(SCM_FIND_MODULE(\"ggc.numerical.fftn\", TRUE));
+    Scm_Init_fftnlib(mod);
+}
+
+"
+
+;; EOF

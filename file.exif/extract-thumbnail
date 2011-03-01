@@ -1,0 +1,57 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+(use gauche.uvector)
+(use ggc.file.exif)
+
+
+(use-tags COMPRESSION 
+          JPEG-INTERCHANGE-FORMAT 
+          JPEG-INTERCHANGE-FORMAT-LENGTH)
+
+
+(define (msg . args)
+  (display "extract-thumbnail: " (current-error-port))
+  (apply format (cons (current-error-port) args))
+  (newline (current-error-port)))
+
+
+(define (extract-thumbnail file)
+
+    (receive (tiff-data endian) (get-tiff-data&endian-from-file file)
+
+      (let ((ifds (root-ifds tiff-data endian)))
+
+        (if (< (length ifds) 2)
+            (error "input file does not have thumbnail"))
+
+        (let ((len (get-tag-value (cadr ifds) JPEG-INTERCHANGE-FORMAT-LENGTH))
+              (pos (get-tag-value (cadr ifds) JPEG-INTERCHANGE-FORMAT))
+              (cmp (get-tag-value (cadr ifds) COMPRESSION)))
+
+          (cond
+
+           ((and len pos cmp (= cmp 6))
+
+            (let ((thumb (uvector-alias <u8vector> tiff-data pos (+ pos len))))
+              (write-block thumb)
+              0))
+
+           ((and cmp (= cmp 1))
+
+            (msg "uncomppressed thumbnail is not supported")
+            -1)
+
+           (else
+            (error "Could not find thumbnail data")))))))
+
+
+(define (main args)
+  (with-error-handler (lambda (e) 
+                        (msg (slot-ref e 'message))
+                        (exit -1))
+    (lambda ()
+      (if (= (length args) 2)
+          (extract-thumbnail (cadr args))
+          (error "Usage: extract-thumbnail exif-file.jpg")))))
+
+;; EOF

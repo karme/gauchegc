@@ -1,0 +1,84 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+;;;
+;;; NOTE: To remove null (Control-@ or 0x00) at the end of string,
+;;;       using awk is one of the easiest.
+;;; $ exif-simple-dump file.jpg | awk '{print}' > file.exif-dump
+;;;
+
+(use ggc.file.exif)
+
+(define (msg . args)
+  (display "exif-simple-dump: " (current-error-port))
+  (apply format (cons (current-error-port) args))
+  (newline (current-error-port)))
+
+(define (print-entry str val)
+  (if val 
+      (begin
+        (display str)
+        (display val)
+        (newline))))
+
+(define (exif-simple-dump file)
+
+  (receive (tiff-data endian) (get-tiff-data&endian-from-file file)
+
+    (let* ((ifds  (root-ifds    tiff-data endian))
+           (ifd0  (car ifds))
+           (exif  (exif-subifds tiff-data ifd0 endian))
+           (eifd  (car exif))
+           (maker (get-maker     ifd0))
+           (model (get-model     ifd0))
+           (date  (get-date-time ifd0))
+           (soft  (get-software  ifd0))
+           (inop  (interoperability-subifds tiff-data eifd endian)))
+      
+      
+      (print-entry "MAKER:         " maker)
+      (print-entry "MODEL:         " model)
+      (print-entry "VERSION:       " soft)
+      (print-entry "FLASH-PIX:     " (get-flash-pix-version eifd))
+      (print-entry "CONFIG:        " (get-components-configuration eifd))
+      (print-entry "MAX-APERTURE:  " (get-max-aperture-value eifd))
+      (print-entry "WIDTH:         " (get-exif-image-width eifd))
+      (print-entry "HEIGHT:        " (get-exif-image-height eifd))
+      (print-entry "DATE:          " date)
+      (print-entry "ISO:           " (get-iso-speed-rating eifd))
+      (print-entry "FLASH:         " (get-flash eifd))
+      (print-entry "PROGURAM:      " (get-exposure-program eifd))
+      (print-entry "EXPOSURE-TIME: " (get-exposure-time eifd))
+      (print-entry "SPEED:         " (get-shutter-speed-value eifd))
+      (print-entry "F-NUMBER:      " (get-f-number eifd))
+      (print-entry "AERTURE:       " (get-aperture-value eifd))
+      (print-entry "BRIGHTNESS:    " (get-brightness-value eifd))
+      (print-entry "Ev:            " (get-Ev eifd))
+      (print-entry "BIAS:          " (get-exposure-bias-value eifd))
+      (print-entry "DISTANCE:      " (get-subject-distance eifd))
+      (print-entry "WHITE-BALANCE: " (get-light-source eifd))
+      (print-entry "METERING-MODE: " (get-metering-mode eifd))
+      (print-entry "FOCAL-LENGTH:  " (get-focal-length eifd))
+      (print-entry "FOCAL-PLANE-X: " (get-focal-plane-x-resolution eifd))
+      (print-entry "FOCAL-PLANE-Y: " (get-focal-plane-y-resolution eifd))
+      (print-entry "FOCAL-PLANE:   " (get-focal-plane-resolution-unit eifd))
+      
+      
+      (if (>= (length ifds) 2)
+          (format #t "THUMBNAIL:     yes~%")
+          (format #t "THUMBNAIL:     no~%"))
+
+      0)))
+
+;;;
+;;;
+;;;
+(define (main args)
+  (with-error-handler (lambda (e) 
+                        (msg (slot-ref e 'message)))
+    (lambda ()
+      (cond ((= (length args) 2)
+             (exif-simple-dump (cadr args)))
+            (else
+             (error "Usage: exif-simple-dump exif-file.jpg"))))))
+
+; EOF

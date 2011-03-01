@@ -1,0 +1,30 @@
+open-mirroring-input has been rewritten by the use of gauche.vport,
+which appeared Gauche 0.8.2 or 0.8.3.
+
+                                               Shigenobu Kimura
+                                                    Jul 4, 2005
+
+
+One day not so long time ago, I noticed the following when I was browsing
+Gauche reference manual, on section 6.18.6 ``Procedural ports'', saying,
+
+>  These procedures are deprecated and will be replaced by more general 
+>  procedural APIs. 
+
+It hit me, and tickling me into a desire to write something with the
+use of them before they go away....
+
+As the result MIRRORING-INPUT was born.  I never expected I could write
+something usefull out of this kind of motivation, but I think this is
+usefull, expecially when you are debugging something like lexer,
+MIRRORING-INPUT will show you how much of input file has been read.
+
+Anyway, it is possible that this implementation of MIRROING-INPUT
+will not work with Gauche newer than version 0.8.
+
+So, enjoy..... for now :-)
+
+
+                                                   Shigenobu Kimura
+                                                        Jul 20, 2004
+

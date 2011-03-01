@@ -1,0 +1,8 @@
+"
+#include <math.h>
+double grand();
+"
+
+(define-cproc %erf  (x::<real>) (call <real> "erf"))
+(define-cproc %erfc (x::<real>) (call <real> "erfc"))
+(define-cproc %grand () (call <real> "grand"))

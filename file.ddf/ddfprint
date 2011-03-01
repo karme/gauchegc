@@ -1,0 +1,46 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+
+(define (ddf-print)
+  (port-for-each 
+   (lambda (c)
+     (cond 
+      ((= #x1e   c) (newline))
+      ((= #x1f   c) (display #\~))
+      ((= #x20   c) (display #\.))
+      (else         (display (integer->char c)))))
+   read-byte))
+
+
+(define (ddf-print2)
+  (let lp  ((c (read-char)))
+    (cond 
+     ((eof-object? c) 0)
+     ((char=? #\x1e   c) 
+      (newline)
+      (lp (read-char))
+      )
+     ((char=? #\x1f   c) 
+      (display #\tab)
+      (lp (read-char))
+      )
+     ((char=? #\space c) 
+      (display #\.)
+      (lp (read-char))
+      )
+     (else 
+      (write c)
+      (lp (read-char))
+      ))))
+
+
+(define (main args)
+  (print "0        1         2         3         4         5         6         7")
+  (print "1234567890123456789012345678901234567890123456789012345678901234567890")
+  (print "*DDF*")
+  (cond ((= (length args) 2)
+         (with-input-from-file (cadr args) ddf-print))
+        ((= (length args) 1)
+         (ddf-print))
+        (else
+         (errorf "~a [file.DDF]~%" (car args)))))

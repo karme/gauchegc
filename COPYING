@@ -1,0 +1,117 @@
+-----------------------------------------------------------------------------
+Gauche Garbage Collection, Copyright notice and licence.
+
+     Copyright (c) 2001 Shigenobu Kimura, All rights reserved.
+
+     Permission is hereby granted, free of charge, to any person
+     obtaining a copy of this software and associated documentation
+     files (the "Software"), to deal in the Software without restriction,
+     including without limitation the rights to use, copy, modify,
+     merge, publish, distribute, sublicense, and/or sell copies of
+     the Software, and to permit persons to whom the Software is
+     furnished to do so, subject to the following conditions:
+
+     The above copyright notice and this permission notice shall be
+     included in all copies or substantial portions of the Software.
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+     BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+     AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+     OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+     IN THE SOFTWARE.
+-----------------------------------------------------------------------------
+Many part of Gauche Garbage Collection is derived from Gauche.
+
+     Copyright (c) 2000-2001 Shiro Kawai, All rights reserved.
+
+     Permission is hereby granted, free of charge, to any person
+     obtaining a copy of this software and associated documentation
+     files (the "Software"), to deal in the Software without restriction,
+     including without limitation the rights to use, copy, modify,
+     merge, publish, distribute, sublicense, and/or sell copies of
+     the Software, and to permit persons to whom the Software is
+     furnished to do so, subject to the following conditions:
+
+     The above copyright notice and this permission notice shall be
+     included in all copies or substantial portions of the Software.
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+     BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+     AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+     OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+     IN THE SOFTWARE.
+-----------------------------------------------------------------------------
+ggc.numerical.fftn uses Mark Olesen's fftn.
+(ggc/fft/fftn.c, ggc/fftn/fftn.h)
+/*
+ * Copyright(c)1995,97 Mark Olesen <olesen@me.QueensU.CA>
+ *		Queen's Univ at Kingston (Canada)
+ *
+ * Permission to use, copy, modify, and distribute this software for
+ * any purpose without fee is hereby granted, provided that this
+ * entire notice is included in all copies of any software which is
+ * or includes a copy or modification of this software and in all
+ * copies of the supporting documentation for such software.
+ *
+ * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR
+ * IMPLIED WARRANTY.  IN PARTICULAR, NEITHER THE AUTHOR NOR QUEEN'S
+ * UNIVERSITY AT KINGSTON MAKES ANY REPRESENTATION OR WARRANTY OF ANY
+ * KIND CONCERNING THE MERCHANTABILITY OF THIS SOFTWARE OR ITS
+ * FITNESS FOR ANY PARTICULAR PURPOSE.
+ *
+ * All of which is to say that you can do what you like with this
+ * source code provided you don't try to sell it as your own and you
+ * include an unaltered copy of this message (including the
+ * copyright).
+ *
+ * It is also implicitly understood that bug fixes and improvements
+ * should make their way back to the general Internet community so
+ * that everyone benefits.
+ *----------------------------------------------------------------------*/
+-----------------------------------------------------------------------------
+gcc.lang.tools uses Dominique Boucher's Lalr,
+  ;;;
+  ;;;; An Efficient and Portable LALR(1) Parser Generator for Scheme
+  ;;;
+  ;;
+  ;; @created   "Mon Jan 22 15:42:32 1996"
+  ;; @modified  "Wed Jan 28 19:25:54 2004"
+  ;; @author    "Dominique Boucher"
+  ;; @version   "2.1.0"
+  ;; @copyright "Dominique Boucher"
+  ;; Copyright (C) 1984, 1989, 1990 Free Software Foundation, Inc.
+  ;;   (for the Bison source code translated in Scheme)
+  ;; Copyright (C) 1996-2003 Dominique Boucher
+  ;;   (for the translation in Scheme)
+  ;;
+
+and GNU Compiler Collection's c-parse.in.
+
+/* YACC parser for C syntax and for Objective C.  -*-c-*-
+   Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997,
+   1998, 1999, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+
+   This file is part of GCC.
+
+   GCC is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License as published by the Free
+   Software Foundation; either version 2, or (at your option) any later
+   version.
+
+   GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with GCC; see the file COPYING.  If not, write to the Free
+   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+   02111-1307, USA.  */
+
+;; EOF

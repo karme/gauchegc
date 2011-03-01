@@ -1,0 +1,17 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+(use ggc.img.eps2x)
+;;;
+;;;
+;;;
+(define (main args)
+  (if (=  5 (length args))
+      (let* ((eps  (list-ref args 1))
+             (to   (list-ref args 2))
+             (dev  (list-ref args 3))
+             (res  (string->number (list-ref args 4))))
+        (format (current-output-port) "Converting ~a -> ~a~%" eps to)
+        (eps2x eps to dev res))
+      (errorf "Usage: ~a file.eps to dev res~%" (car args))))
+
+; EOF

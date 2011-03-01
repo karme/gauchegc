@@ -1,0 +1,48 @@
+
+        Introduction to Gauche Garbage Collection Project.
+
+Gauche Garbage Collection (ggc) is a collection of programs for 
+Gauche. We collect programs which are considered as ``garbage grade'',
+i.e., poor quality or rarely useful programs for most people other 
+than the author him/herself.  One of the motivations to distribute such 
+programs is to encourage Gauche users to share their programs to Gauche 
+comminuty even though he/she would think his/her code do not have enough 
+quality to publish.  Share ideas! 
+
+Contents:
+
+        ggc                     ggc top. 
+        ggc.lwp                 multi processinng.
+        ggc.debug               utilities for debug
+        ggc.debug.trace           trace macro
+        ggc.file                file related
+        ggc.file.bdf              read BDF file
+        ggc.file.exif             read EXIF IFDs
+        ggc.file.jpeg             read JPEG markers
+        ggc.file.util             utilities such as basename, rindex, etc.
+        ggc.img                 imaging
+        ggc.img.eps2x             eps to image converter (by the use of Ghostscript)
+        ggc.lang.tool           language tool (Lalr parser, lexer for C-like language)
+        ggc.math                mathematical procedures (symbolic or exact operations)
+                                  empty for now
+        ggc.net                 network protocols
+        ggc.numerical           numerical procedures
+        ggc.numerical.fftn        Fast Fourier Fransform
+        ggc.numerical.lapck       Lapack bindings
+        ggc.numerical.extra       Extra numerical functions
+                                  error function, gaussian noise.
+        ggc.port                port utilities
+        ggc.port.mirroring        input-port mirroring.
+        ggc.term                terminal control (echo-off, raw-mode)
+        ggc.skimu               experimetal code by skimu
+        ggc.skimu.frame-buffer    bitmap drawing, jpg, png, ppm
+        ggc.skimu.gnuplot         plot using gnuplot_x11 or plot_glut
+
+
+Contributer(s)
+
+        Shigenobu Kimura <skimu@mac.com>
+        
+See ggc/COPYING for copyright notices and licences.     
+
+;; EOF

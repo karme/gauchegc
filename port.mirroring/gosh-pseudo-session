@@ -1,0 +1,93 @@
+#!/usr/bin/env gosh
+;; -*-Scheme-*-
+
+(use ggc.port.mirroring)
+
+(define (pseudo-session src)
+  (let ((in   #f)
+	(out  #f)
+	(real-out (current-output-port)))
+
+    (define (print-with-prefix . vals)
+      (flush out)
+      (display ";=> " real-out)
+      (map (lambda (x)
+	     (write x real-out)
+	     (display " " real-out))
+	   vals)
+      (newline real-out)
+      (flush real-out)
+      )
+
+    (define (reader-with-trick)
+      ;;
+      ;; Once gosh read an expr we need to prepare for
+      ;; the following output events, i.e, skip to the 
+      ;; end-of-line. So you can't start new expr right 
+      ;; after the previous one, though it is not common
+      ;; case especially for the input of this program.
+      ;;
+      (begin0 (read in) 
+              (let lp ((c (peek-char in)))
+                (if (not (eof-object? c))
+                    (if (not (char=? c #\newline))
+                        (begin
+                          (read-char in)
+                          (lp (peek-char in))))))
+              ))
+
+    (define (output-filter)
+      (let ((need-prefix #t))
+        (lambda (str)
+
+          (define (end-of-line)
+            (set! need-prefix #t)
+            (display "\"" real-out)
+            (newline real-out)
+            (flush real-out))
+        
+          (define (start-line)
+            (set! need-prefix #f)
+            (display ";| \"" real-out))
+          
+          (if (eq? str #f)
+              0
+              (let lp ((lis (string->list 
+                             (string-incomplete->complete str)))
+                       (n   0))
+                (if (null? lis)
+                    n
+                    (begin
+                      (if (char=? (car lis) #\newline)
+                          (end-of-line)
+                          (begin
+                            (if need-prefix (start-line))
+                            (display (car lis) real-out)
+                            (flush real-out)))
+                      (lp (cdr lis) (+ n 1)))))))))
+
+    (dynamic-wind 
+	(lambda ()
+	  (set! in  (open-mirroring-input src real-out))
+	  (set! out (open-output-buffered-port (output-filter) 1)))
+	(lambda ()
+	  (with-output-to-port out
+	    (lambda ()
+	      (read-eval-print-loop reader-with-trick
+				    #f		     
+				    print-with-prefix
+				    (lambda v #t)))))
+	(lambda ()
+	  (close-input-port  in)
+          (close-output-port out)))))
+
+(define (pseudo-session-with-file scmfile)
+  (call-with-input-file scmfile pseudo-session))
+
+(define (main args)
+  (if (= (length args) 2)
+      (pseudo-session-with-file (cadr args))
+      (error "Usage: pseudo-gauche-session file.scm"))
+  0)
+
+;;EOF

@@ -1,0 +1,17 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+
+(use ggc.file.util)
+(use ggc.img.eps2x)
+;;;
+;;;
+;;;
+(define (main args)
+  (if (=  2 (length args))
+      (let* ((eps  (cadr args))
+             (png (string-append (basename eps ".eps") ".png")))
+        (format (current-output-port) "Converting ~a -> ~a~%" eps png)
+        (eps2x eps png "png256" 72))
+      (errorf "Usage: ~a file.eps~%" (car args))))
+
+; EOF

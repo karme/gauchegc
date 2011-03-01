@@ -1,0 +1,26 @@
+#!/usr/bin/env gosh
+;-*-Scheme-*-
+;;; $Id: pun2digit,v 1.3 2004/03/28 02:42:48 skimu Exp $
+
+;;; Digitize (analog) binary bits.
+;;; output in decimal
+
+(use ggc.file.spice)
+
+(define (main args)
+  (if (>= (length args) 3)
+      (let ((th   (string->number (cadr args)))
+	    (pun  (with-input-from-file (caddr args) read-pun))
+	    (sigs (map string->symbol (cdddr args))))
+	(let ((douts (map (lambda (sig)
+			    (binize-signal th (pun-signal pun sig)))
+			  sigs)))
+	  (for-each (lambda (x)
+		      (format #t "~a ~a~%" (car x) (cdr x)))
+		    (douts2dec douts))))
+      (error "Usage: dout2dec th pun-file sig0 [sig1 sig2 ...]"))
+  0)
+
+
+
+		       		       

@@ -1,0 +1,168 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+;;;
+;;; MkExifIndex = exif-index + exif-simple-dump
+;;;
+;;; Usage:
+;;;
+;;;    $ mkexifindex *.JPG > index.html
+;;;
+;;; or you can pass parameter via shell-environment
+;;;
+;;;    $ COLS=2 SIZE=80000 mkexifindex *.JPG > index.html
+;;;
+
+;;;
+;;; NOTE: Content-type is hard-coded
+;;;
+(use srfi-13)
+(use file.util)
+(use text.tree)
+(use text.html-lite)
+(use ggc.file.exif)
+
+(define (get-param env default)
+  (let ((x (sys-getenv env)))
+    (if x x default)))
+
+(define COLS (string->number (get-param "COLS" "4")))
+(define SIZE (get-param "SIZE" "20000"))
+
+(define (mess . args)
+  (let lp ((args args))
+    (cond 
+     ((null? args) (newline (current-error-port)))
+     (else
+      (display (car args) (current-error-port))
+      (lp (cdr args))))))
+      
+(define (mk-specimen orig dest)
+  (sys-system (string-append
+               "djpeg " orig 
+               " | pnmscale -pixels " SIZE
+               " | cjpeg > " dest)))
+
+(define (date->tree-jp date-time)
+  (let ((ll (string-tokenize date-time #[[:digit:]])))
+    (list (list-ref ll 0)   #\Ç¯
+          (list-ref ll 1)   #\·î
+          (list-ref ll 2)   "Æü <br>"
+          (list-ref ll 3)   #\»þ
+          (list-ref ll 4)   #\Ê¬
+          (list-ref ll 5)   "ÉÃ »£±Æ")))
+
+(define (ifd->info-tree file ifd0 eifd)
+
+  (define (ent str val)
+    (if val
+        (html:tr (html:td str)
+                 (html:td val))
+        ""))
+
+  (html:html 
+   (html:head (html:title "Exif info of " file))
+   (html:body 
+    (html:h1 file)
+    (html:a :href (string-append "../" file)
+            (html:img :src (string-append "../specs/" file)))
+    (html:table 
+     :border 0
+     (ent "MAKER:         " (get-maker    ifd0))
+     (ent "MODEL:         " (get-model    ifd0))
+     (ent "VERSION:       " (get-software ifd0))
+     (ent "FLASH-PIX:     " (get-flash-pix-version eifd))
+     (ent "CONFIG:        " (get-components-configuration eifd))
+     (ent "MAX-APERTURE:  " (get-max-aperture-value eifd))
+     (ent "WIDTH:         " (get-exif-image-width eifd))
+     (ent "HEIGHT:        " (get-exif-image-height eifd))
+     (ent "DATE:          " (get-date-time ifd0))
+     (ent "ISO:           " (get-iso-speed-rating eifd))
+     (ent "FLASH:         " (get-flash eifd))
+     (ent "PROGURAM:      " (get-exposure-program eifd))
+     (ent "EXPOSURE-TIME: " (get-exposure-time eifd))
+     (ent "SPEED:         " (get-shutter-speed-value eifd))
+     (ent "F-NUMBER:      " (get-f-number eifd))
+     (ent "AERTURE:       " (get-aperture-value eifd))
+     (ent "BRIGHTNESS:    " (get-brightness-value eifd))
+     (ent "Ev:            " (get-Ev eifd))
+     (ent "BIAS:          " (get-exposure-bias-value eifd))
+     (ent "DISTANCE:      " (get-subject-distance eifd))
+     (ent "WHITE-BALANCE: " (get-light-source eifd))
+     (ent "METERING-MODE: " (get-metering-mode eifd))
+     (ent "FOCAL-LENGTH:  " (get-focal-length eifd))
+     (ent "FOCAL-PLANE-X: " (get-focal-plane-x-resolution eifd))
+     (ent "FOCAL-PLANE-Y: " (get-focal-plane-y-resolution eifd))
+     (ent "FOCAL-PLANE:   " (get-focal-plane-resolution-unit eifd))
+     ))))
+
+(define (photo->tree file)
+
+  (let ((specimen (string-append "specs/" file)))
+
+    (if (not (file-exists? specimen))
+        (begin
+          (mess "making specimen for " file)
+          (mk-specimen file specimen)))
+    
+    (with-error-handler 
+        (lambda (e) 
+          ;; Non Exif
+          (mess (slot-ref e 'message))
+          (html:td (html:a :href file 
+                           (html:img :src specimen))))
+      (lambda ()
+
+        (receive (tiff endian) (get-tiff-data&endian-from-file file)
+          
+          (let* ((ifds (root-ifds tiff endian))
+                 (ifd0 (car ifds))
+                 (exif (exif-subifds tiff ifd0 endian))
+                 (ifde (car exif))
+                 (date (get-date-time ifd0))
+                 (info (string-append "infos/" file ".html")))
+
+            (with-output-to-file info
+              (lambda ()
+                (write-tree (ifd->info-tree file ifd0 ifde))))
+
+            (html:td :align "CENTER" (html:a :href file 
+                                             (html:img :src specimen))
+                     "<br>" (date->tree-jp date)
+                     "<br>"
+                     (html:a :href info file))
+            ))))))
+
+
+(define (mk-table files)
+  (let lp ((files files)
+           (col   COLS)
+           (tree  (list "\n<tr>")))
+    (cond 
+     ((null? files) (reverse (cons "</tr>\n" tree)))
+     ((> col 1)
+      (lp (cdr files)
+          (- col 1)
+          (cons (photo->tree (car files)) 
+                tree)))
+     (else
+      (lp (cdr files) 
+          COLS
+          (cons "\n</tr><tr>\n"
+                (cons (photo->tree (car files)) 
+                      tree)))))))
+
+(define (mk-exif-index files)
+  (make-directory* "specs")
+  (make-directory* "infos")
+  (html:html (html:head (html:meta :http-equiv "Content-Type"
+                                   :content "text/html; charset=euc-jp")
+                        (html:title (current-directory)))
+             (html:body (html:table :border 0 (mk-table files)))))
+
+(define (main args)
+  (cond ((> (length args) 1)
+         (write-tree (mk-exif-index (cdr args)))
+         0)
+        (else 0)))
+
+;; EOF

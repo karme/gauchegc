@@ -1,0 +1,44 @@
+*** gnuplot-3.7/gplt_x11.c	Tue Dec 15 14:22:52 1998
+--- gnuplot-gplt_x11s/gplt_x11.c	Sat Aug 11 20:12:43 2001
+***************
+*** 233,239 ****
+  Visual *vis;
+  GC gc = (GC) 0;
+  XFontStruct *font;
+! int do_raise = 1, persist = 0;
+  KeyCode q_keycode;
+  Cursor cursor;
+  
+--- 233,239 ----
+  Visual *vis;
+  GC gc = (GC) 0;
+  XFontStruct *font;
+! int do_raise = 0, persist = 0;
+  KeyCode q_keycode;
+  Cursor cursor;
+  
+***************
+*** 566,576 ****
+      int i;
+      char *term_name;
+  
+-     for (i = 0; i < plot->ncommands; ++i)
+- 	free(plot->commands[i]);
+-     plot->ncommands = 0;
+- 
+      if (!plot->posn_flags) {
+  	/* first time this window has been used - use default or -geometry
+  	 * settings
+  	 */
+--- 566,576 ----
+      int i;
+      char *term_name;
+  
+      if (!plot->posn_flags) {
++ 	for (i = 0; i < plot->ncommands; ++i)
++ 	  free(plot->commands[i]);
++ 	plot->ncommands = 0;
++ 
+  	/* first time this window has been used - use default or -geometry
+  	 * settings
+  	 */

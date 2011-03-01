@@ -1,0 +1,18 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+;;; $Id: pun2list,v 1.1 2004/03/28 01:15:37 skimu Exp $
+
+(use ggc.file.spice)
+
+(define (main args)
+  (let ((n (length args)))
+    (cond ((> n 1)
+           (for-each (lambda (f)
+                       (let ((pun (with-input-from-file f read-pun)))
+                         (print-pun pun)))
+                     (cdr args)))
+          (else
+           (print-pun (read-pun)))))
+  0)
+
+;; EOF

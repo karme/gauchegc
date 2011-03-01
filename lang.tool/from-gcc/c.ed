@@ -1,0 +1,14 @@
+/^%{/,/^%}/d
+/^%{/,/^%}/d
+$
+?^%%?ka
+'a+1,$d
+g/^%type/d
+g/<[A-Za-z].*>/s///
+1
+/^%union/,/}/d
+1,$s/'{'/ABRACADABRA_LBRA/g
+1,$s/'}'/ABRACADABRA_RBRA/g
+w
+q
+

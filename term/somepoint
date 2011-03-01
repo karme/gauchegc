@@ -1,0 +1,61 @@
+#!/usr/bin/env gosh
+;;; -*-Scheme-*-
+;;; 
+;;; somepoint: yet another *point presentation tool.
+;;;
+
+(use ggc.term.with-raw-mode)
+
+(define tv #f)
+(define nl 0)
+(define pt 0)
+
+(define (show-page)
+  (display "\x1b\x5b\x48\x1b\x5b\x32\x4a\x00")     ; clear
+  (let lp  ((i pt))
+    (if (>= i nl)
+        (set! pt nl)
+        (if (equal? (vector-ref tv i) "")
+            (set! pt (+ i 1))
+            (begin
+              (display (vector-ref tv i))
+              (newline)
+              (lp (+ i 1)))))))
+
+
+(define (show-prev)
+  (define (one-up)
+    (let lp ((i (- pt 2)))
+      (if (<= i 0) 
+          (set! pt 0)
+          (if (equal? (vector-ref tv i) "")
+              (set! pt (+ i 1))
+              (lp (- i 1))))))
+  (one-up)                              ; top of current page
+  (one-up)                              ; top of previous page.
+  (show-page))
+
+(define (main args)
+  (if (not (= 2 (length args)))
+      (error "usage: pinpoint input.pnp")
+      (begin
+        (set! tv (list->vector (call-with-input-file (cadr args)
+                                 (lambda (p)
+                                   (port->string-list p)))))
+        (set! nl (vector-length tv))
+        (show-page)
+        (with-raw-mode 
+         (lambda ()
+           (let lp ((c (read-char)))
+             ;;   (format #t "c=~s~%" c)
+             (if (eof-object? c)
+                 (exit 0)
+                 (begin
+                   (case c
+                     ((#\b #\B #\p #\P) (show-prev))
+                     ((#\q #\Q) (exit 0))
+                     (else      (show-page)))
+                   (lp (read-char))))))))))
+
+
+;; EOF

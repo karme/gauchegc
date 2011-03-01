@@ -1,0 +1,18 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+(use ggc.file.spice)
+
+;;; Example of pun-get-signal-from-cip
+
+(define (main args)
+  (if (= (length args) 3)
+      (let ((pts (with-input-from-file (cadr args) 
+		   (lambda ()
+		     (pun-get-signal-from-cip (caddr args))))))
+	(for-each (lambda (p)
+		    (format #t "~a ~a~%" (car p) (cdr p)))
+		  pts))
+      (error "Usage: pundat pun-file signame"))
+  0)
+	
+

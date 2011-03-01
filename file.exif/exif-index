@@ -1,0 +1,109 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+;;;
+;;; Usage:
+;;;
+;;;    $ exif-index *.JPG > index.html
+;;;
+;;; or you can pass parameter via shell-environment
+;;;
+;;;    $ COLS=2 SIZE=80000 exif-index *.JPG > index.html
+;;;
+
+;;;
+;;; NOTE: Content-type is hard-coded
+;;;
+(use srfi-13)
+(use file.util)
+(use text.tree)
+(use text.html-lite)
+(use ggc.file.exif)
+
+(define (get-param env default)
+  (let ((x (sys-getenv env)))
+    (if x x default)))
+
+(define COLS (string->number (get-param "COLS" "4")))
+(define SIZE (get-param "SIZE" "20000"))
+
+(define (mess . args)
+  (let lp ((args args))
+    (cond 
+     ((null? args) (newline (current-error-port)))
+     (else
+      (display (car args) (current-error-port))
+      (lp (cdr args))))))
+      
+(define (mk-specimen orig dest)
+  (sys-system (string-append
+               "djpeg " orig 
+               " | pnmscale -pixels " SIZE
+               " | cjpeg > " dest)))
+
+(define (date->tree-jp date-time)
+  (let ((ll (string-tokenize date-time #[[:digit:]])))
+    (list (list-ref ll 0)   #\Ç¯
+          (list-ref ll 1)   #\·î
+          (list-ref ll 2)   "Æü <br>"
+          (list-ref ll 3)   #\»þ
+          (list-ref ll 4)   #\Ê¬
+          (list-ref ll 5)   "ÉÃ »£±Æ")))
+
+(define (photo->tree file)
+
+  (let ((specimen (string-append "specs/" file)))
+
+    (if (not (file-exists? specimen))
+        (begin
+          (mess "making specimen for " file)
+          (mk-specimen file specimen)))
+    
+    (with-error-handler 
+        (lambda (e) 
+          ;; Non Exif
+          (mess (slot-ref e 'message))
+          (html:td (html:a :href file 
+                           (html:img :src specimen))))
+      (lambda ()
+        (receive (tiff endian) (get-tiff-data&endian-from-file file)
+
+          (let* ((ifds (root-ifds tiff endian))
+                 (ifd0 (car ifds))
+                 (date (get-date-time ifd0)))
+
+            (html:td :align "CENTER"
+                     (html:a :href file (html:img :src specimen))
+                     "<br>" (date->tree-jp date))))))))
+
+(define (mk-table files)
+  (let lp ((files files)
+           (col   COLS)
+           (tree  (list "\n<tr>")))
+    (cond 
+     ((null? files) (reverse (cons "</tr>\n" tree)))
+     ((> col 1)
+      (lp (cdr files)
+          (- col 1)
+          (cons (photo->tree (car files)) 
+                tree)))
+     (else
+      (lp (cdr files) 
+          COLS
+          (cons "\n</tr><tr>\n"
+                (cons (photo->tree (car files)) 
+                      tree)))))))
+
+(define (mk-exif-index files)
+  (make-directory* "specs")
+  (html:html (html:head (html:meta :http-equiv "Content-Type"
+                                   :content "text/html; charset=euc-jp")
+                        (html:title (current-directory)))
+             (html:body (html:table :border 0 (mk-table files)))))
+
+(define (main args)
+  (cond ((> (length args) 1)
+         (write-tree (mk-exif-index (cdr args)))
+         0)
+        (else 0)))
+
+;; EOF

@@ -1,0 +1,95 @@
+#!/usr/bin/env gosh
+; -*-Scheme-*-
+(use gauche.uvector)
+(use ggc.file.jpeg)
+
+(define (dump-u8vector v)
+
+  (define (print-address a)  (format #t "   ~4'0X:" a))
+  (define (print-data d)     (format #t " ~2'0X"  d))
+  (define (print--data d)    (format #t "-~2'0X"  d))
+  (define (print-asc asc)
+    (if (null? asc) 
+        #t
+        (let ((c (integer->char (car asc))))
+          (if (char-set-contains? #[[:print:]] c)
+              (display c)
+              (display #\.))
+          (print-asc (cdr asc)))))
+
+  (define (vref adr) (u8vector-ref v adr))
+
+  (print-address 0)
+  (let lp ((adr 0)
+           (col 16)
+           (asc '())
+           (len (u8vector-length v)))
+    (cond ((<= len 0)  
+           (display #\space)
+           (dotimes (_ (* col 3)) (display #\space))
+           (print-asc (reverse asc))
+           (newline))
+          ((<= col 0)
+           (display #\space)
+           (print-asc (reverse (cons (vref adr) asc)))
+           (newline)
+           (print-address adr)
+           (print-data (vref adr))
+           (lp (+ adr 1) 
+               15 
+               (list (vref adr))
+               (- len 1)))
+          ((= col 8)
+           (print--data (vref adr))
+           (lp (+ adr 1) 
+               (- col 1) 
+               (cons (vref adr) asc)
+               (- len 1)))
+          (else
+           (print-data (vref adr))
+           (lp (+ adr 1) 
+               (- col 1) 
+               (cons (vref adr) asc)
+               (- len 1))))))
+
+;;;
+(define (jpeg-markers dump?)
+
+  (define (print-m m)
+    (let ((x (cond ((= m SOI) 'SOI)
+                   ((= m EOI) 'EOI)
+                   ((= m APP0) 'APP0)
+                   ((= m APP1) 'APP1)
+                   (else m))))
+      (if (symbol? x)
+          (format #t "~a~%" x)
+          (format #t "0x~2'0X~%" x))))
+
+  (let lp ((j (read-jpeg)))
+    (cond 
+     ((null? j) 0)
+     ((eq? (caar j) SOI)
+      (format #t  "SOI~%")
+      (lp (cdr j)))
+     ((eq? (caar j) EOI)
+      (format #t  "EOI~%")
+      (lp (cdr j)))
+     ((eq? (caar j) SOS)
+      (format #t  "SOS~%")
+      (lp (cddr j)))
+     (else
+      (print-m (caar j))
+      (if dump? (dump-u8vector (cadar j)))
+      (lp (cdr j))))))
+
+
+(define (main args)
+  (cond ((= (length args) 2)
+         (with-input-from-file (cadr args) 
+           (lambda () (jpeg-markers #f))))
+        ((= (length args) 3)
+         (with-input-from-file (cadr args) 
+           (lambda () (jpeg-markers #t))))
+        (else
+         (jpeg-markers))))
+; EOF

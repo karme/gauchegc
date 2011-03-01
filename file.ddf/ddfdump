@@ -1,0 +1,60 @@
+#!/usr/bin/env gosh
+;; -*-Scheme-*-
+;;;
+;;; DDFDUMP : dump DDF file
+;;;
+;;;
+(use ggc.file.ddf)
+(use ggc.file.ddf-fread)
+
+(define (print-lv l v)
+  (define (p l v)
+    (cond ((null? l) #t)
+          ((not (null? v))
+           (format #t "    |~a| ~s~%"  (car l)  (car v))
+           (p (cdr l) (cdr v)))
+          (else
+           (format #t "    |~a| ~s~%"  (car l)  #f)
+           (p (cdr l) '()))))
+  (p l v))
+
+(define (print-sadr l v)
+  (display "    |")
+  (for-each (lambda (x) 
+              (display x)
+              (display #\|))
+            l)
+  (newline)
+  (for-each (lambda (x)
+              (display "           ")
+              (display x)
+              (newline))
+            v))
+
+(define (ddf-dump)
+  (receive (ddr drs) (read-ddf)
+    (for-each 
+     (lambda (dr)
+       (for-each 
+        (lambda (ent)
+          (let* ((tag  (car ent))
+                 (name (ddr-get-name tag ddr))
+                 (lbls (ddr-get-labels tag ddr))
+                 (fmt  (ddr-get-format tag ddr))
+                 (vals (ddf-fread-from-string fmt (cadr ent))))
+            (format #t "|~a| ~s ~a~%" tag name fmt)
+            (if (eq? tag 'SADR)
+                (print-sadr lbls vals)
+                (print-lv lbls vals))))
+        dr))
+     drs)))
+
+(define (main args)
+  (cond ((= (length args) 2)
+         (with-input-from-file (cadr args) ddf-dump))
+        ((= (length args) 1) 
+         (ddf-dump))
+        (else
+         (errorf "usage:~a [file.ddf]~%" (car args)))))
+
+;; EOF

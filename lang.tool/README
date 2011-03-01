@@ -1,0 +1,28 @@
+** Redistribution Note **
+
+GPL'ed files : lalr-gauche.scm, c-parse.scm, and files under from-gcc.
+Public domain: c-gram.scm and files under from-usenet.
+Modified BSD : anything else.
+
+
+** Description of files **
+
+lalr-gauche.scm : Dominique Boucher's Lalr
+   (http://www.iro.umontreal.ca/~boucherd/Lalr/documentation/lalr.html)
+
+gauche.decls:
+
+c-parse.scm : C parse derived from GCC's c-parse.in.
+c-gram.scm  : derived from gram.y from USENET Article.
+
+lalr.scm    : lalr module, this loads lalr-gauche.scm
+
+c-lex.scm   : c-lexer for c-parse.scm
+c-scan.scm  : c-lexer for c-gram.scm
+c-lex-common.scm : common parts for c-lex.scm and c-scan.scm
+
+from-gcc    : Stuffs from GCC.
+from-usenet : Stuffs from USENET.
+
+
+                          Shigenobu Kimura <skimu@mac.com>

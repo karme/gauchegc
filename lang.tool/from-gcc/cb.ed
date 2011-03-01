@@ -1,0 +1,4 @@
+1,$s/ABRACADABRA_LBRA/'{'/g
+1,$s/ABRACADABRA_RBRA/'}'/g
+w
+q

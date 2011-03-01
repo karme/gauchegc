@@ -1,0 +1,28 @@
+ggc.file.ddf
+     Data Descriptive File (ISO 8211) reader
+
+ggc.file.ddf-sdts-dlg
+     SDTS/DLG reader
+
+Sample data are not come with ggc, but you can obtain
+them from either 
+     http://www.cs.arizona.edu/icon/oddsends/dlgvu/palo_alto.zip
+or
+     http://edc.usgs.gov/geodata/.
+
+References
+
+   A DLG Viewer for UNIX
+     http://www.cs.arizona.edu/icon/oddsends/dlgvu/
+
+   SDTS
+     Home Page   http://mcmcweb.er.usgs.gov/sdts/
+     Document    http://mcmcweb.er.usgs.gov/sdts/standard.html
+
+   Usefull documents,
+     http://www.3dartist.com/WP/sdts/sdtsnotes.htm
+     http://www.jst.go.jp/SIST/handbook/sist11/index.htm
+
+                                         9/4/2004 
+                                         Shigenobu Kimura
+;; EOF

@@ -1,0 +1,21 @@
+(use ggc.numerical.fft1d)
+(use math.const)
+(use srfi-1)
+
+(define (comp lis1 lis2)
+  (let ((dif (map (lambda (x y) 
+                    (abs (- x y)))
+                  lis1 lis2)))
+    (apply + dif)))
+
+(define (test-fft N)
+  (let* ((in  (iota N))
+         (fc  (fft1d-fft  in))
+         (out (fft1d-rfft fc)))
+    (print (comp in out))))
+
+(define (main args)
+  (if (= (length args) 2)
+      (test-fft (string->number (cadr args)))
+      (error "test N"))
+  0)
