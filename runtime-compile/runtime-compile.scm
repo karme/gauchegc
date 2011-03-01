@@ -39,6 +39,9 @@
 ;; - assumes current directory is in load-path
 ;; - each compilation loads a module that is never unloaded
 ;; - likely doesn't work on windows
+;; - there is also dyncomp
+;;   <http://www.koguro.net/prog/dyncomp/index.html>
+;;   using tiny c compiler (tcc) for compilation
 (define-module runtime-compile
   (use gauche.package.compile)
   (use gauche.cgen.precomp)
