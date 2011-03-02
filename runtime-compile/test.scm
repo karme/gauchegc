@@ -15,7 +15,7 @@
         (interaction-environment)))
 
 (define (timed thunk)
-  (let1 t (make <real-time-counter>)
+  (let1 t (make <user-time-counter>)
     (with-time-counter t
       (thunk))
     (time-counter-value t)))
