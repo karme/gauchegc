@@ -14,6 +14,7 @@
   (eval `(lambda(x1 y1 x2 y2) ,body)
         (interaction-environment)))
 
+;; todo: use new gauche function time-these?
 (define (timed thunk)
   (let1 t (make <user-time-counter>)
     (with-time-counter t
