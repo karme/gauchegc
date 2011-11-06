@@ -75,11 +75,13 @@
        (define-cfn handle-print (obj p::ScmPort* c::ScmWriteContext*) ::void :static
          (Scm_Printf p "#<fdmap @%p>" obj))
        (initcode (= fdmapClass
-                    (Scm_MakeForeignPointerClass mod
-                                                 "<fdmap>"
-                                                 handle-print
-                                                 NULL ;; handle-cleanup
-                                                 SCM_FOREIGN_POINTER_KEEP_IDENTITY)))
+                    (Scm_MakeForeignPointerClass
+                     ;; todo: how to refer to current module in cise?
+                     (Scm_FindModule (SCM_SYMBOL (SCM_INTERN "fork-process")) 0)
+                     "<fdmap>"
+                     handle-print
+                     NULL ;; handle-cleanup
+                     SCM_FOREIGN_POINTER_KEEP_IDENTITY)))
        (define-cproc sys-swap-fds (obj) ::<void>
          (unless (SCM_XTYPEP obj fdmapClass) (SCM_TYPE_ERROR obj "<fdmap>"))
          (Scm_SysSwapFds (SCM_FOREIGN_POINTER_REF (int*) obj)))
