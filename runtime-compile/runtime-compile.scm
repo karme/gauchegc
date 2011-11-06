@@ -45,6 +45,7 @@
 (define-module runtime-compile
   (use gauche.package.compile)
   (use gauche.cgen.precomp)
+  (use gauche.cgen.tmodule)
   (use file.util)
   (use srfi-27)
   (export cise-compile-and-load
@@ -148,6 +149,11 @@
                      . ,stub)))
             ;; (cat scm-file)
             ;; create .c and .sci from .scm
+            ;; hackish workaround for bug? in gauche 0.9.2
+            (when (not (null? (all-tmodules)))
+              (class-slot-set! (with-module gauche.cgen.precomp (current-tmodule-class))
+                               'modules
+                               (list)))
             (cgen-precompile scm-file :ext-initializer #t)
             ;; compile .so
             (gauche-package-compile-and-link new-mod
