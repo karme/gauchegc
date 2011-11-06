@@ -90,7 +90,7 @@
          (Scm_SysSwapFds (SCM_FOREIGN_POINTER_REF (int*) obj)))
        (define-cproc sys-prepare-fdmap (obj)
          (result (Scm_MakeForeignPointer fdmapClass (Scm_SysPrepareFdMap obj)))))
-     '(sys-swap-fds sys-prepare-fdmap make-scmobj-ptr))))
+     '(sys-swap-fds sys-prepare-fdmap))))
 
 (define (sys-sigset-inv sigset)
   (sys-sigset-delete! (sys-sigset-fill! (make <sys-sigset>)) sigset))
