@@ -45,7 +45,7 @@
 (define-module runtime-compile
   (use gauche.package.compile)
   (use gauche.cgen.precomp)
-  (use gauche.cgen.tmodule)
+  (use gauche.version)
   (use file.util)
   (use srfi-27)
   (export cise-compile-and-load
@@ -109,7 +109,16 @@
 ;;                           :verbose #t
 ;;                           :cppflags "-v -fverbose-asm -O3 -S")
 ;;   (cat (path-swap-extension c-file ".o")))
-  
+
+;; todo: there must be a better way!
+(define-macro (ifdef c x)
+  (cond [(boolean? c)
+         (if c x '#t)]
+        [else
+         `(ifdef ,(eval c
+                        (current-module) ;; ouch
+                        ) ,x)]))
+
 (define (%compile-and-load stub imports module)  
   ;; todo
   (define (pprint x)
@@ -149,11 +158,14 @@
                      . ,stub)))
             ;; (cat scm-file)
             ;; create .c and .sci from .scm
-            ;; hackish workaround for bug? in gauche 0.9.2
-            (when (not (null? (all-tmodules)))
-              (class-slot-set! (with-module gauche.cgen.precomp (current-tmodule-class))
-                               'modules
-                               (list)))
+            ;; hackish workaround for bug in unpatched gauche 0.9.2
+            ;; s.a. upstream commit
+            ;; 5e44a7cce57d7320fce2db985f1be82d612c275c
+            (ifdef (version=? "0.9.2" (gauche-version))
+                   (let1 c (with-module gauche.cgen.precomp (current-tmodule-class))
+                     (when (and (member 'modules (map car (ref c 'slots)))
+                                (not (null? (class-slot-ref c 'modules))))
+                       (class-slot-set! c 'modules (list)))))
             (cgen-precompile scm-file :ext-initializer #t)
             ;; compile .so
             (gauche-package-compile-and-link new-mod
