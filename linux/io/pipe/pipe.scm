@@ -11,9 +11,11 @@
 (define (my-fcntl port . l)
   (apply fcntl (cons (port-file-number port) l)))
 
+;; todo: F_GETPIPE_SZ (void; since Linux 2.6.35)
 (define (get-pipe-buffer-size p)
   (my-fcntl p F_GETPIPE_SZ))
 
+;; todo: F_SETPIPE_SZ (long; since Linux 2.6.35)
 (define (set-pipe-buffer-size! p rns)
   (my-fcntl p F_SETPIPE_SZ rns)
   (let1 ns (my-fcntl p F_GETPIPE_SZ)
