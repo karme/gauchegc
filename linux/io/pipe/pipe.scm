@@ -11,17 +11,21 @@
 (define (my-fcntl port . l)
   (apply fcntl (cons (port-file-number port) l)))
 
+
+
 ;; todo: F_GETPIPE_SZ (void; since Linux 2.6.35)
 (define (get-pipe-buffer-size p)
-  (my-fcntl p F_GETPIPE_SZ))
+  (when (global-variable-bound? (current-module) 'F_GETPIPE_SZ)
+    (my-fcntl p F_GETPIPE_SZ)))
 
 ;; todo: F_SETPIPE_SZ (long; since Linux 2.6.35)
 (define (set-pipe-buffer-size! p rns)
-  (my-fcntl p F_SETPIPE_SZ rns)
-  (let1 ns (my-fcntl p F_GETPIPE_SZ)
-  (when (not (<= rns ns))
-    (error #`"could not increase buffer size to ,|ns|! please adjust kernel setting fs.pipe-max-size"))
-  ns))
+  (when (global-variable-bound? (current-module) 'F_SETPIPE_SZ)
+    (my-fcntl p F_SETPIPE_SZ rns)
+    (let1 ns (my-fcntl p F_GETPIPE_SZ)
+      (when (not (<= rns ns))
+        (error #`"could not increase buffer size to ,|rns|! please adjust kernel setting fs.pipe-max-size"))
+      ns)))
 
 (define vmsplice-block
   (let1 iov (make <c-struct:iovec>)
