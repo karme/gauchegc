@@ -116,6 +116,7 @@
              (let1 pid (sys-fork)
                (case pid
                  [(0)
+                  ;; todo: BUG! empty process-list!
                   (sys-swap-fds fds)
                   (when sigmask
                     ;; reset signal handlers except the masked ones
@@ -194,6 +195,7 @@
              (let1 pid (sys-fork)
                (case pid
                  [(0)
+                  ;; todo: BUG! empty process-list!
                   ;; todo: detached => fork again+setsid
                   (sys-swap-fds fds)
                   (when sigmask
