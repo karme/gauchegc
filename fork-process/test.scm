@@ -243,6 +243,19 @@
                (flush)))
            (wait-exit p))))
 
+(test* "process-list in child"
+       0
+       (let* ((p1 (fork-process (lambda()
+                                  (sys-sleep 1))))
+              (p2 (fork-process (lambda()
+                                  (sys-exit
+                                   (if (null? #?=(process-list))
+                                     0
+                                     1))))))
+         (and (not (null? (process-list)))
+              (wait-exit p1)
+              (wait-exit p2))))
+
 ;; (test* "fastcgi like"
 ;;        #t
 ;;        (let loop ()
