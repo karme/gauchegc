@@ -6,6 +6,7 @@
 (use gauche.process)
 (use srfi-1)
 (use gauche.selector)
+(use util.stream)
 
 (test-start "parallel")
 
@@ -171,10 +172,20 @@
                             #t))))
             (let1 r (parallel-map f l :limit 8)
               (bg-call-wait future)
-              r))))
+              r)))))
 
-  (test  "zombies?" '() process-list)
-
-  )
+(test  "zombies(1)?" '() process-list)
+(set-signal-handler! SIGPIPE #f)
+(test* "zombies(2)?" '()
+       (begin
+         (guard (e
+                 [else
+                  ;;#?=e
+                  #t])
+                (stream->list (parallel-stream-map (lambda(x)
+                                                     (error "foo"))
+                                                   (list->stream (iota 4))
+                                                   :handshake #f)))
+         (process-list)))
 
 (test-end)
