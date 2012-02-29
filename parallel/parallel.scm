@@ -87,10 +87,22 @@
                                       '(r))
                        b)))
            (first-ready? (lambda() (cadr (car q))))
+           (cleanup (lambda()
+                      (while (not (null? q))
+                        (guard (e
+                                [else
+                                 #t])
+                               (unwind-protect
+                                (bg-call-wait (car (car q)))
+                                (pop! q))))))
            (get-first! (lambda()
-                         (let1 r (bg-call-wait (car (car q)))
-                           (set! q (cdr q))
-                           r)))
+                         (guard (e
+                                 [else
+                                  (cleanup)
+                                  (raise e)])
+                                (unwind-protect
+                                 (bg-call-wait (car (car q)))
+                                 (pop! q)))))
            (refill (lambda(s)
                      (let1 tolaunch (min (- limit (outstanding))
                                          (- lookahead (length q)))
