@@ -104,6 +104,9 @@
                         (current-module) ;; ouch
                         ) ,x)]))
 
+(define (clear-process-list!)
+  (class-slot-set! <process> 'processes '()))
+
 (ifdef (version=? "0.9" (gauche-version))
        ;; based on sys-fork-and-exec/Scm_SysExec
        (define (sys-fork-and-call thunk . args)
@@ -116,7 +119,7 @@
              (let1 pid (sys-fork)
                (case pid
                  [(0)
-                  ;; todo: BUG! empty process-list!
+                  (clear-process-list!)
                   (sys-swap-fds fds)
                   (when sigmask
                     ;; reset signal handlers except the masked ones
@@ -195,7 +198,7 @@
              (let1 pid (sys-fork)
                (case pid
                  [(0)
-                  ;; todo: BUG! empty process-list!
+                  (clear-process-list!)
                   ;; todo: detached => fork again+setsid
                   (sys-swap-fds fds)
                   (when sigmask
