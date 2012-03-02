@@ -159,33 +159,37 @@
   (test "signals"
         r
         (lambda()
-          (set-signal-handler! SIGHUP #f) ;; ignore sighup
-          (let* ((pid (sys-getpid))
-                 (future (bg-call
-                          (lambda()
-                            (sys-nanosleep 0.05e9)
-                            (sys-kill pid SIGHUP)
-                            (sys-kill (sys-getpid) SIGHUP)
-                            ;;(sys-kill pid SIGPIPE)
-                            ;;(sys-kill (sys-getpid) SIGPIPE)
-                            (sys-nanosleep 0.05e9)
-                            #t))))
-            (let1 r (parallel-map f l :limit 8)
-              (bg-call-wait future)
-              r)))))
+          (with-signal-handlers
+           ([SIGHUP => #f]) ;; ignore sighup
+           (lambda()
+             (let* ((pid (sys-getpid))
+                    (future (bg-call
+                             (lambda()
+                               (sys-nanosleep 0.05e9)
+                               (sys-kill pid SIGHUP)
+                               (sys-kill (sys-getpid) SIGHUP)
+                               ;;(sys-kill pid SIGPIPE)
+                               ;;(sys-kill (sys-getpid) SIGPIPE)
+                               (sys-nanosleep 0.05e9)
+                               #t))))
+               (let1 r (parallel-map f l :limit 8)
+                 (bg-call-wait future)
+                 r)))))))
 
 (test  "zombies(1)?" '() process-list)
-(set-signal-handler! SIGPIPE #f)
-(test* "zombies(2)?" '()
-       (begin
-         (guard (e
-                 [else
-                  ;;#?=e
-                  #t])
-                (stream->list (parallel-stream-map (lambda(x)
-                                                     (error "foo"))
-                                                   (list->stream (iota 4))
-                                                   :handshake #f)))
-         (process-list)))
+(with-signal-handlers
+ ([SIGPIPE => #f])
+ (lambda()
+   (test* "zombies(2)?" '()
+          (begin
+            (guard (e
+                    [else
+                     ;;#?=e
+                     #t])
+                   (stream->list (parallel-stream-map (lambda(x)
+                                                        (error "foo"))
+                                                      (list->stream (iota 4))
+                                                      :handshake #f)))
+            (process-list)))))
 
 (test-end)
