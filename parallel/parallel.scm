@@ -47,7 +47,14 @@
                        (lambda()
                          (unwind-protect
                           (deserialize-result)
-                          (process-wait child #f #t)))))
+                          (begin
+                            ;; close input port to prevent dead-lock
+                            (close-input-port (process-output child))
+                            ;; todo:
+                            ;; - maybe terminate process after some time?
+                            ;; - really report error on non-zero exit?
+                            ;;   (what if deserialize-result reported an error?)
+                            (process-wait child #f #t))))))
                    child))))
 
 ;; wait for result
