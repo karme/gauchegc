@@ -61,6 +61,8 @@
 (define (bg-call-wait p)
   (force (car p)))
 
+;; todo: bg-call-cancel?!
+
 ;; get selectable port
 (define (bg-call-selectable p)
   (process-output (cadr p)))
@@ -100,33 +102,40 @@
                                 [else
                                  #t])
                                (unwind-protect
+                                ;; todo: bg-call-cancel?
                                 (bg-call-wait (car (car q)))
                                 (pop! q))))))
            (get-first! (lambda()
-                         (guard (e
-                                 [else
-                                  (cleanup)
-                                  (raise e)])
-                                (unwind-protect
-                                 (bg-call-wait (car (car q)))
-                                 (pop! q)))))
+                         (unwind-protect
+                          (bg-call-wait (car (car q)))
+                          (pop! q))))
            (refill (lambda(s)
                      (let1 tolaunch (min (- limit (outstanding))
                                          (- lookahead (length q)))
                        (set! q (append q (map launch
                                               (stream->list (stream-take-safe s tolaunch)))))
                        (stream-drop-safe s tolaunch)))))
-      (let loop ((s (refill stream)))
-        (stream-delay
-         (let loop2 ((s s))
-           (cond [(null? q)
-                  stream-null]
-                 [(not (first-ready?))
-                  (selector-select selector)
-                  (loop2 (refill s))]
-                 [else
-                  (stream-cons (get-first!)
-                               (loop (refill s)))])))))))
+      (guard (e [else
+                 (cleanup)
+                 (raise e)])
+             (let loop ((s (refill stream)))
+               (stream-delay
+                (let loop2 ((s s))
+                  (guard (e [else
+                             (cleanup)
+                             (raise e)])
+                         (cond [(null? q)
+                                stream-null]
+                               [(not (first-ready?))
+                                (selector-select selector)
+                                (loop2 (refill s))]
+                               [else
+                                (stream-cons
+                                 (guard (e [else
+                                            (cleanup)
+                                            (raise e)])
+                                        (get-first!))
+                                 (loop (refill s)))])))))))))
 
 (define parallel-stream-map parallel-stream-map-bg-call)
 
