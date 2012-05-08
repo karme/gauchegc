@@ -62,6 +62,9 @@
   (force (car p)))
 
 ;; todo: bg-call-cancel?!
+;; could send signal to cancel
+;; but then childs would have to install signals handlers to propagate
+;; and signals are ...
 
 ;; get selectable port
 (define (bg-call-selectable p)
@@ -97,6 +100,9 @@
                        b)))
            (first-ready? (lambda() (cadr (car q))))
            (cleanup (lambda()
+                      ;; maybe would be simpler to use a process group for all childs
+                      ;; => we could kill them all (including sub-childs)
+                      ;; but signals are ...
                       (while (not (null? q))
                         (guard (e
                                 [else
