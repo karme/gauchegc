@@ -7,8 +7,10 @@
 	  balance-close))
 
 (select-module balance-board)
-(c-load "bluetooth/bluetooth.h" :libs-cmd "pkg-config --libs bluez")
-(c-load "cwiid.h" :libs-cmd "pkg-config --libs cwiid")
+
+(c-load "bluetooth/bluetooth.h" :libs-cmd "sh -c 'echo -L/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH) $(pkg-config --libs bluez)'")
+(c-load "cwiid.h" :libs-cmd "sh -c 'echo -L/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH) $(pkg-config --libs cwiid)'")
+
 (define BDADDR_ANY (strtoba "00:00:00:00:00:00"))
 
 (define (balance-open)
