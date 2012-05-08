@@ -120,6 +120,7 @@
                (case pid
                  [(0)
                   (clear-process-list!)
+                  ;; todo: somehow get unregister_buffered_port called
                   (sys-swap-fds fds)
                   (when sigmask
                     ;; reset signal handlers except the masked ones
@@ -199,6 +200,7 @@
                (case pid
                  [(0)
                   (clear-process-list!)
+                  ;; todo: somehow get unregister_buffered_port called
                   ;; todo: detached => fork again+setsid
                   (sys-swap-fds fds)
                   (when sigmask
