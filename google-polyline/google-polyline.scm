@@ -214,7 +214,7 @@
 (compile-and-load
  `((inline-stub
     (define-cproc cline-rel-dist2 (l::<f64vector> px::<double> py::<double>)
-      ::<number> :constant
+      ::<number> ;; :constant (constant not available in gauche 0.9)
       (let* ((ax::double  (SCM_F64VECTOR_ELEMENT l 0))
              (ay::double  (SCM_F64VECTOR_ELEMENT l 1))
              (abx::double (SCM_F64VECTOR_ELEMENT l 2))
