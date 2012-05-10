@@ -111,7 +111,7 @@
 
 (define google-polyline-decode-levels decode-unsigned-numbers)
 
-(define (google-polyline-decode-level epl el level)
+(define (google-polyline-decode-level level epl el)
   (filter-map (lambda(p l)
                 (if (>= l level)
                   p
@@ -119,8 +119,8 @@
               (google-polyline-decode epl)
               (google-polyline-decode-levels el)))
 
-;; (apply google-polyline-decode-level (append (google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10))) '(7)))
-;; (apply google-polyline-decode-level (append (google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10))) '(6)))
+;; (apply google-polyline-decode-level (cons 7 (google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10)))))
+;; (apply google-polyline-decode-level (cons 6 (google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10)))))
 
 (define (encode-number n)
   (let loop ((r (list))
