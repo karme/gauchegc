@@ -39,6 +39,8 @@
   (use gauche.uvector)
   (use runtime-compile)
   (export google-polyline-decode
+          google-polyline-decode-levels
+          google-polyline-decode-level
           google-polyline-encode
           polyline-dp-exact
           polyline-dp-inexact
@@ -84,6 +86,41 @@
                                  (let1 r (- (char->integer (ref s index)) 63)
                                    (inc! index)
                                    r)))))
+
+(define (decode-next-unsigned-number get-next)
+  (let loop ((accu 0)
+             (shift 0))
+    (let* ((b (get-next))
+           (next-accu (logior accu (ash (logand b #x1f) shift))))
+      (if (>= b #x20)
+        (loop next-accu (+ shift 5))
+        next-accu))))
+
+(define (decode-unsigned-numbers s)
+  (let ((len (string-size s))
+        (index 0)
+        (ret '()))
+    (while (< index len)
+      (push! ret (decode-next-unsigned-number (lambda()
+                                                (let1 r (- (char->integer (ref s index)) 63)
+                                                  (inc! index)
+                                                  r)))))
+    (reverse! ret)))
+
+;; (decode-unsigned-numbers (apply string-append (map encode-number (iota 18))))
+
+(define google-polyline-decode-levels decode-unsigned-numbers)
+
+(define (google-polyline-decode-level epl el level)
+  (filter-map (lambda(p l)
+                (if (>= l level)
+                  p
+                  #f))
+              (google-polyline-decode epl)
+              (google-polyline-decode-levels el)))
+
+;; (apply google-polyline-decode-level (append (google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10))) '(7)))
+;; (apply google-polyline-decode-level (append (google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10))) '(6)))
 
 (define (encode-number n)
   (let loop ((r (list))
