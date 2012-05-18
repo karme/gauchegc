@@ -101,8 +101,8 @@
        (eprint #`"runtime-compile: Leaving directory `,|name|'")
        (current-directory old-dir)))))
 
-;; (define (cat x)
-;;   (copy-port (open-input-file x) (current-output-port)))
+(define (cat x)
+  (copy-port (open-input-file x) (current-output-port)))
 
 ;; (define (cat-asm c-file)
 ;;   (gauche-package-compile c-file
@@ -167,12 +167,17 @@
                                 (not (null? (class-slot-ref c 'modules))))
                        (class-slot-set! c 'modules (list)))))
             (cgen-precompile scm-file :ext-initializer #t)
+            ;; (cat c-file)
             ;; compile .so
-            (gauche-package-compile-and-link new-mod
-                                             (list c-file)
-                                             :verbose #t
-                                             ;; todo: better use default
-                                             :cppflags "-O3 -pipe")
+            (with-output-to-port (current-error-port)
+              (lambda()
+                (gauche-package-compile-and-link new-mod
+                                                 (list c-file)
+                                                 :verbose #t
+                                                 ;; todo: allow to pass-through!
+                                                 ;; :cppflags "-O3 -pipe -D_FILE_OFFSET_BITS=64 -I/usr/include/fuse"
+                                                 ;; :libs "-pthread -lfuse -lrt -ldl"
+                                                 )))
             ;; (cat sci-file)
             (for-each (cut eval <> module)
                       `((load ,sci-file)
