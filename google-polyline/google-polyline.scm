@@ -119,8 +119,8 @@
               (google-polyline-decode epl)
               (google-polyline-decode-levels el)))
 
-;; (apply google-polyline-decode-level (cons 7 (google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10)))))
-;; (apply google-polyline-decode-level (cons 6 (google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10)))))
+;; (apply google-polyline-decode-level (cons 7 #?=(google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10)))))
+;; (apply google-polyline-decode-level (cons 6 #?=(google-polyline-encode-dp-exact '((10 10) (10.001 10.001) (11 10)))))
 
 (define (encode-number n)
   (let loop ((r (list))
