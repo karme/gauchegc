@@ -1,0 +1,202 @@
+#| -*- mode: scheme; coding: utf-8; -*- |#
+;;;
+;;; simple geodesic calculations on wgs84 spheroid or sphere using
+;;; geographiclib >=1.6 (http://geographiclib.sourceforge.net/)
+;;;
+;;; Copyright (C) 2010-2012 Jens Thiele <karme@karme.de>
+;;;
+;;; This program is free software: you can redistribute it and/or modify
+;;; it under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;;;
+;;; todo:
+;;; - direct wrapper without c-wrapper
+;;;
+
+(define-module geod
+  (use c-wrapper)
+  (use gauche.collection)
+  (use gauche.sequence)
+  (use srfi-1)
+  (use util.list)
+  (export geod-direct
+          geod-inverse
+	  geod-distance
+          geod-upsample-line
+          geod-upsample-polyline
+	  geod-sample-polyline-with-measure
+          geod-add-measure))
+
+(select-module geod)
+(c-load '("geodwrapper.h") :libs-cmd "echo -L. -lgeodwrapper") ;; todo: remove -L.
+
+;; todo: also in ...
+(define-macro (assert e)
+  `(if (not ,e)
+     (error "Assertion failed: " ,(x->string e))))
+
+(define (wrap c-func)
+  (let* ((d   (make (c-array <c-double> 11)))
+         (ptr (cast (ptr <c-double>) d))
+         (p   (lambda(x) (c-ptr+ ptr x))))
+    (lambda l
+      (let* ((s (assoc-ref '((wgs84 . 0)
+                             (sphere . 1)) (car l)))
+             (l (cdr l)))
+        (assert (member s '(0 1)))
+        (dotimes (i 4)
+          (set! (ref d i) (ref l i)))
+        (let1 r (c-func s
+                        (ref d 0)
+                        (ref d 1)
+                        (ref d 2)
+                        (ref d 3)
+                        (p 4)
+                        (p 5)
+                        (p 6)
+                        (p 7)
+                        (p 8)
+                        (p 9)
+                        (p 10))
+          (cons (cast <number> r)
+                (map (cut cast <number> <>)
+                     d)))))))
+
+(define geod-direct
+  (let1 f (wrap geod_direct)
+    (lambda(s p az dist)
+      (permute (f s (cadr p) (car p) az dist)
+               '(6 5)))))
+
+(define geod-inverse
+  (let1 f (wrap geod_inverse)
+    (lambda(s p1 p2)
+      (permute (f s (cadr p1) (car p1) (cadr p2) (car p2))
+               '(6 5)))))
+
+(define geod-distance (compose cadr (cut geod-inverse <> <> <>)))
+
+(define (sample x)
+  (map (lambda(i)
+         (/ i (- x 1)))
+       (iota x)))
+
+;; todo:
+;; - use GeodesicLine or parallel variant
+;; - return distance measurements?
+(define (geod-upsample-line s b e max-dist)
+  (let* ((inv (geod-inverse s b e))
+         (az  (car inv))
+         (d   (cadr inv)))
+    (if (<= d max-dist)
+      (list b e)
+      (let1 samples (+ (ceiling->exact (/ d max-dist)) 1)
+        (append (list b)
+                (map (lambda(x)
+                       (geod-direct s b az (* x d)))
+                     (subseq (sample samples) 1 -1))
+                (list e))))))
+
+;; todo: also in ...
+(define (uniq l)
+  (if (null? l)
+    '()
+    (reverse (fold (lambda(n o)
+                     (if (equal? n (car o))
+                       o
+                       (cons n o)))
+                   (list (car l))
+                   (cdr l)))))
+
+;; todo: parallel variant!
+(define (geod-add-measure s l)
+  (if (null? l)
+    '()
+    (reverse
+     (fold
+      (lambda(n o)
+        (cons (append n
+                      (list
+                       (+ (geod-distance s (car o) n)
+                          (last (car o)))))
+              o))
+      (list (append (car l) (list 0)))
+      (cdr l)))))
+
+;; todo:
+;; - return distance measurements?
+;; - usage of uniq not really good
+;; - parallel variant!
+(define (geod-upsample-polyline s l max-dist)
+  (if (< (size-of l) 2)
+      l 
+      (uniq (append-map (lambda(b e)
+			  (geod-upsample-line s b e max-dist))
+			(subseq l 0 -1)
+			(subseq l 1)))))
+
+;; port from python
+;; note: don't use it with lists ;-)
+;; (srfi-43 only defines vector-binary-search)
+(define (bisect-right seq x . args)
+  (let-optionals* args ((cmpfn <)
+			(lo 0)
+			(hi (size-of seq)))
+		  (if (>= lo hi)
+		      lo
+		      (let1 mid (quotient (+ lo hi) 2)
+			    (if (cmpfn x (ref seq mid))
+				(bisect-right seq x cmpfn lo mid)
+				(bisect-right seq x cmpfn (+ mid 1) hi))))))
+
+(define bisect bisect-right)
+
+(define (seq-empty? seq)
+  (zero? (size-of seq)))
+
+(define (seq-first seq)
+  (assert (not (seq-empty? seq)))
+  (ref seq 0))
+
+(define (seq-last seq)
+  (assert (not (seq-empty? seq)))
+  (ref seq (- (size-of seq) 1)))
+
+;; returns resampled 3d polyline with distance measurements of
+;; original polyline as third component
+;; note: usually resulting polyline will have different length, if you remeasure!
+(define (geod-sample-polyline-with-measure s pl samples)
+  (let* ((plm (coerce-to <vector> (geod-add-measure s pl)))
+	 (total-length (last (seq-last plm)))
+	 (pl-at (lambda(t)
+		  (let* ((pos (- (bisect-right plm
+						  t
+						  (lambda(x elt) (< x (last elt))))
+				    1))
+			 (segment-offset (if (< pos 0)
+						t
+						(- t (last (ref plm pos))))))
+		    (assert (<= t total-length))
+		    (subseq (geod-direct s
+					 (subseq (ref plm pos) 0 2)
+					 (car (geod-inverse s (ref plm pos) (ref plm (+ pos 1))))
+					 segment-offset)
+			    0
+			    2)))))
+    (assert (not (seq-empty? plm)))
+    (append (list (seq-first plm))
+	    (map (lambda(t)
+		   (let1 d (* t total-length)
+			 (append (pl-at d)
+				 (list d))))
+		 (subseq (sample samples) 1 -1))
+	    (list (seq-last plm)))))
