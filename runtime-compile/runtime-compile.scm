@@ -48,8 +48,8 @@
   (use gauche.version)
   (use file.util)
   (use srfi-27)
-  (export cise-compile-and-load
-          compile-and-load))
+  (export compile-and-load
+          cise-compile-and-load))
 
 (select-module runtime-compile)
 
@@ -119,7 +119,7 @@
                         (current-module) ;; ouch
                         ) ,x)]))
 
-(define (%compile-and-load stub imports module)  
+(define (%compile-and-load module stub imports . args)
   ;; todo
   (define (pprint x)
     (for-each (cut format #t "~s\n" <>)
@@ -171,13 +171,10 @@
             ;; compile .so
             (with-output-to-port (current-error-port)
               (lambda()
-                (gauche-package-compile-and-link new-mod
-                                                 (list c-file)
-                                                 :verbose #t
-                                                 ;; todo: allow to pass-through!
-                                                 ;; :cppflags "-O3 -pipe -D_FILE_OFFSET_BITS=64 -I/usr/include/fuse"
-                                                 ;; :libs "-pthread -lfuse -lrt -ldl"
-                                                 )))
+                (apply gauche-package-compile-and-link
+                       (append (list new-mod
+                                     (list c-file))
+                               args))))
             ;; (cat sci-file)
             (for-each (cut eval <> module)
                       `((load ,sci-file)
@@ -189,12 +186,10 @@
 
 ;; todo:
 ;; - be closer to c-wrapper c-load api?
-(define-macro (cise-compile-and-load stub imports)
-  `(compile-and-load (list (cons 'inline-stub ,stub)) ,imports))
+(define-macro (compile-and-load . args)
+  `((with-module runtime-compile %compile-and-load) (current-module) . ,args))
 
 ;; todo:
 ;; - be closer to c-wrapper c-load api?
-(define-macro (compile-and-load stub imports)
-  `((with-module runtime-compile %compile-and-load)
-    ,stub
-    ,imports (current-module)))
+(define-macro (cise-compile-and-load stub . args)
+  `(compile-and-load (list (cons 'inline-stub ,stub)) . ,args))
