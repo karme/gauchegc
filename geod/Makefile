@@ -8,5 +8,5 @@ libgeodwrapper.so: geodwrapper.o
 	$(CXX) -shared -g -o $@ $< -Lgeographiclib-1.6/src/.libs -lGeographic
 
 clean:
-	rm -v *.so *.o *~
+	rm -vf *.so *.o *~
 
