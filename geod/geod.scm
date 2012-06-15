@@ -28,8 +28,12 @@
   (use gauche.sequence)
   (use srfi-1)
   (use util.list)
+  (use file.util)
+  (use runtime-compile)
   (export geod-direct
+          geod-direct-old
           geod-inverse
+          geod-inverse-old
 	  geod-distance
           geod-upsample-line
           geod-upsample-polyline
@@ -44,13 +48,21 @@
   `(if (not ,e)
      (error "Assertion failed: " ,(x->string e))))
 
+(define (spheroid->int s)
+  (case s
+    [(wgs84)
+     0]
+    [(sphere)
+     1]
+    [else
+     (error "Unknown spheroid" s)]))
+
 (define (wrap c-func)
   (let* ((d   (make (c-array <c-double> 11)))
          (ptr (cast (ptr <c-double>) d))
          (p   (lambda(x) (c-ptr+ ptr x))))
     (lambda l
-      (let* ((s (assoc-ref '((wgs84 . 0)
-                             (sphere . 1)) (car l)))
+      (let* ((s (spheroid->int (car l)))
              (l (cdr l)))
         (assert (member s '(0 1)))
         (dotimes (i 4)
@@ -71,17 +83,63 @@
                 (map (cut cast <number> <>)
                      d)))))))
 
-(define geod-direct
+(define geod-direct-old
   (let1 f (wrap geod_direct)
     (lambda(s p az dist)
       (permute (f s (cadr p) (car p) az dist)
                '(6 5)))))
 
-(define geod-inverse
+(define geod-inverse-old
   (let1 f (wrap geod_inverse)
     (lambda(s p1 p2)
       (permute (f s (cadr p1) (car p1) (cadr p2) (car p2))
                '(6 5)))))
+
+(compile-and-load
+ `((inline-stub
+    (declcode
+     (.include "geodwrapper.h"))
+    (define-cproc geod_direct_c (s::<int> lat1::<double> lon1::<double> azi1::<double> s12::<double>)
+      (let* ((lat2::double  0)
+             (lon2::double 0)
+             (azi2::double 0)
+             (m12::double 0)
+             (M12::double 0)
+             (M21::double 0)
+             (S12::double 0))
+        (geod_direct s lat1 lon1 azi1 s12
+                     (& lat2) (& lon2)
+                     ;; todo: don't use them
+                     (& azi2) (& m12) (& M12) (& M21) (& S12)
+                     )
+        (result (SCM_LIST2 (Scm_MakeFlonum lon2)
+                           (Scm_MakeFlonum lat2)))))
+    (define-cproc geod_inverse_c (s::<int> lat1::<double> lon1::<double> lat2::<double> lon2::<double>)
+      (let* ((s12::double  0)
+             (azi1::double 0)
+             (azi2::double 0)
+             (m12::double 0)
+             (M12::double 0)
+             (M21::double 0)
+             (S12::double 0))
+        (geod_inverse s lat1 lon1 lat2 lon2
+                      (& s12) (& azi1)
+                      ;; todo: don't use them
+                      (& azi2) (& m12) (& M12) (& M21) (& S12)
+                      )
+        (result (SCM_LIST2 (Scm_MakeFlonum azi1)
+                           (Scm_MakeFlonum s12)))))))
+ '(geod_direct_c geod_inverse_c)
+ :cflags #`"-I,(current-directory)"
+ :libs #`"-L,(current-directory) -lgeodwrapper -Wl,,-rpath=,(current-directory)")
+
+(define (geod-direct s p az dist)
+  (geod_direct_c (spheroid->int s) (cadr p) (car p) az dist))
+
+(define (geod-inverse s p1 p2)
+  (geod_inverse_c (spheroid->int s)
+                  (cadr p1) (car p1)
+                  (cadr p2) (car p2)))
 
 (define geod-distance (compose cadr (cut geod-inverse <> <> <>)))
 
