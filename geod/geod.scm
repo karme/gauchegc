@@ -56,7 +56,9 @@
  `((inline-stub
     (declcode
      (.include "geodwrapper.h"))
-    (define-cproc geod_direct_c (s::<int> lat1::<double> lon1::<double> azi1::<double> s12::<double>)
+    (define-cproc geod_direct_c (s::<int>
+                                 lat1::<double> lon1::<double>
+                                 azi1::<double> s12::<double>)
       (let* ((lat2::double  0)
              (lon2::double 0)
              (azi2::double 0)
@@ -71,7 +73,9 @@
                      )
         (result (SCM_LIST2 (Scm_MakeFlonum lon2)
                            (Scm_MakeFlonum lat2)))))
-    (define-cproc geod_inverse_c (s::<int> lat1::<double> lon1::<double> lat2::<double> lon2::<double>)
+    (define-cproc geod_inverse_c (s::<int>
+                                  lat1::<double> lon1::<double>
+                                  lat2::<double> lon2::<double>)
       (let* ((s12::double  0)
              (azi1::double 0)
              (azi2::double 0)
@@ -88,7 +92,10 @@
                            (Scm_MakeFlonum s12)))))))
  '(geod_direct_c geod_inverse_c)
  :cflags #`"-I,(current-directory)"
- :libs #`"-L,(current-directory) -lgeodwrapper -Wl,,-rpath=,(current-directory)")
+ :libs (string-join (list (string-append "-L" (current-directory))
+                          "-lgeodwrapper"
+                          (string-append "-Wl,-rpath="
+                                         (current-directory)))))
 
 (define (geod-direct s p az dist)
   (geod_direct_c (spheroid->int s) (cadr p) (car p) az dist))
@@ -153,11 +160,11 @@
 ;; - parallel variant!
 (define (geod-upsample-polyline s l max-dist)
   (if (< (size-of l) 2)
-      l 
-      (uniq (append-map (lambda(b e)
-			  (geod-upsample-line s b e max-dist))
-			(subseq l 0 -1)
-			(subseq l 1)))))
+    l 
+    (uniq (append-map (lambda(b e)
+                        (geod-upsample-line s b e max-dist))
+                      (subseq l 0 -1)
+                      (subseq l 1)))))
 
 ;; port from python
 ;; note: don't use it with lists ;-)
@@ -166,12 +173,12 @@
   (let-optionals* args ((cmpfn <)
 			(lo 0)
 			(hi (size-of seq)))
-		  (if (>= lo hi)
-		      lo
-		      (let1 mid (quotient (+ lo hi) 2)
-			    (if (cmpfn x (ref seq mid))
-				(bisect-right seq x cmpfn lo mid)
-				(bisect-right seq x cmpfn (+ mid 1) hi))))))
+    (if (>= lo hi)
+      lo
+      (let1 mid (quotient (+ lo hi) 2)
+        (if (cmpfn x (ref seq mid))
+          (bisect-right seq x cmpfn lo mid)
+          (bisect-right seq x cmpfn (+ mid 1) hi))))))
 
 (define bisect bisect-right)
 
@@ -188,22 +195,27 @@
 
 ;; returns resampled 3d polyline with distance measurements of
 ;; original polyline as third component
-;; note: usually resulting polyline will have different length, if you remeasure!
+;; note: usually resulting polyline will have different length, if you
+;; remeasure!
 (define (geod-sample-polyline-with-measure s pl samples)
   (let* ((plm (coerce-to <vector> (geod-add-measure s pl)))
 	 (total-length (last (seq-last plm)))
 	 (pl-at (lambda(t)
 		  (let* ((pos (- (bisect-right plm
-						  t
-						  (lambda(x elt) (< x (last elt))))
-				    1))
+                                               t
+                                               (lambda(x elt)
+                                                 (< x (last elt))))
+                                 1))
 			 (segment-offset (if (< pos 0)
-						t
-						(- t (last (ref plm pos))))))
+                                           t
+                                           (- t (last (ref plm pos))))))
 		    (assert (<= t total-length))
 		    (subseq (geod-direct s
 					 (subseq (ref plm pos) 0 2)
-					 (car (geod-inverse s (ref plm pos) (ref plm (+ pos 1))))
+					 (car (geod-inverse s
+                                                            (ref plm pos)
+                                                            (ref plm
+                                                                 (+ pos 1))))
 					 segment-offset)
 			    0
 			    2)))))
@@ -211,7 +223,7 @@
     (append (list (seq-first plm))
 	    (map (lambda(t)
 		   (let1 d (* t total-length)
-			 (append (pl-at d)
-				 (list d))))
+                     (append (pl-at d)
+                             (list d))))
 		 (subseq (sample samples) 1 -1))
 	    (list (seq-last plm)))))
