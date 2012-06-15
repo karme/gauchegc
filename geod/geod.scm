@@ -23,17 +23,13 @@
 ;;;
 
 (define-module geod
-  (use c-wrapper)
   (use gauche.collection)
   (use gauche.sequence)
   (use srfi-1)
-  (use util.list)
   (use file.util)
   (use runtime-compile)
   (export geod-direct
-          geod-direct-old
           geod-inverse
-          geod-inverse-old
 	  geod-distance
           geod-upsample-line
           geod-upsample-polyline
@@ -41,7 +37,6 @@
           geod-add-measure))
 
 (select-module geod)
-(c-load '("geodwrapper.h") :libs-cmd "echo -L. -lgeodwrapper") ;; todo: remove -L.
 
 ;; todo: also in ...
 (define-macro (assert e)
@@ -56,44 +51,6 @@
      1]
     [else
      (error "Unknown spheroid" s)]))
-
-(define (wrap c-func)
-  (let* ((d   (make (c-array <c-double> 11)))
-         (ptr (cast (ptr <c-double>) d))
-         (p   (lambda(x) (c-ptr+ ptr x))))
-    (lambda l
-      (let* ((s (spheroid->int (car l)))
-             (l (cdr l)))
-        (assert (member s '(0 1)))
-        (dotimes (i 4)
-          (set! (ref d i) (ref l i)))
-        (let1 r (c-func s
-                        (ref d 0)
-                        (ref d 1)
-                        (ref d 2)
-                        (ref d 3)
-                        (p 4)
-                        (p 5)
-                        (p 6)
-                        (p 7)
-                        (p 8)
-                        (p 9)
-                        (p 10))
-          (cons (cast <number> r)
-                (map (cut cast <number> <>)
-                     d)))))))
-
-(define geod-direct-old
-  (let1 f (wrap geod_direct)
-    (lambda(s p az dist)
-      (permute (f s (cadr p) (car p) az dist)
-               '(6 5)))))
-
-(define geod-inverse-old
-  (let1 f (wrap geod_inverse)
-    (lambda(s p1 p2)
-      (permute (f s (cadr p1) (car p1) (cadr p2) (car p2))
-               '(6 5)))))
 
 (compile-and-load
  `((inline-stub
