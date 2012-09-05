@@ -177,19 +177,30 @@
                  r)))))))
 
 (test  "zombies(1)?" '() process-list)
-(with-signal-handlers
- ([SIGPIPE => #f])
- (lambda()
-   (test* "zombies(2)?" '()
-          (begin
-            (guard (e
-                    [else
-                     ;;#?=e
-                     #t])
-                   (stream->list (parallel-stream-map (lambda(x)
-                                                        (error "foo"))
-                                                      (list->stream (iota 4))
-                                                      :handshake #f)))
-            (process-list)))))
+(test* "zombies(2)?" '()
+       (begin
+         (guard (e
+                 [else
+                  ;;#?=e
+                  #t])
+                (stream->list (parallel-stream-map (lambda(x)
+                                                     (error "foo"))
+                                                   (list->stream (iota 4))
+                                                   :handshake #f)))
+         (process-list)))
+
+(define-condition-type <timeout> <error>
+  timeout?)
+
+(test* "zombies(3) - sigalrm?" '()
+       (with-signal-handlers
+        ([SIGALRM => (lambda(x) (error <timeout>))])
+        (lambda()                     
+          (sys-alarm 1)
+          (guard (e [else #t])
+                 (stream->list (parallel-stream-map (lambda(x)
+                                                      (sys-sleep 2))
+                                                    (list->stream (iota 4)))))
+          (process-list))))
 
 (test-end)
