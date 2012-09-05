@@ -283,6 +283,13 @@
            (lambda(p)
              (cline-rel-dist2 v (car p) (cadr p))))))]))
 
+;; (define (2d-line-segment-point-dist-inexact a b)
+;;   (if (equal? a b)
+;;     (compose sqrt (cut m-list-2d-distance² a <>))
+;;     (compose sqrt
+;;              (cut /. <> (m-list-2d-distance² a b))
+;;              (m-list-2d-line-segment-point-rel-dist²-inexact a b))))
+    
 ;; todo: nearly the same as polyline-dp-exact
 (define (polyline-dp-inexact points very-small)
   (assert (vector? points))
