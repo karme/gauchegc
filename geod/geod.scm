@@ -18,9 +18,6 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
-;;; todo:
-;;; - direct wrapper without c-wrapper
-;;;
 
 (define-module geod
   (use gauche.collection)
@@ -55,7 +52,35 @@
 (compile-and-load
  `((inline-stub
     (declcode
-     (.include "geodwrapper.h"))
+     (.include "GeographicLib/Geodesic.hpp")
+     "static const GeographicLib::Geodesic sphere(6378137,0);"
+     "static const GeographicLib::Geodesic* spheroid[]={&GeographicLib::Geodesic::WGS84, &sphere};"
+     "double geod_direct(unsigned s,
+	                 double lat1, double lon1, double azi1, double s12,
+	                 double* lat2, double* lon2, double* azi2,
+	                 double* m12, double* M12, double* M21, double* S12) {
+        try {
+          return spheroid[s]->Direct(lat1, lon1, azi1, s12,
+	  		             *lat2, *lon2, *azi2,
+	  		             *m12, *M12, *M21, *S12);
+        }catch(...){
+          // todo:
+          return std::numeric_limits<double>::quiet_NaN();
+        }
+      }"
+      "double geod_inverse(unsigned s,
+	                   double lat1, double lon1, double lat2, double lon2,
+	                   double* s12, double* azi1, double* azi2, double* m12,
+	                   double* M12, double* M21, double* S12) {
+        try{
+          return spheroid[s]->Inverse(lat1, lon1, lat2, lon2,
+			              *s12, *azi1, *azi2, *m12,
+			              *M12, *M21, *S12);
+        }catch(...){
+          // todo:
+          return std::numeric_limits<double>::quiet_NaN();
+        }
+      }")
     (define-cproc geod_direct_c (s::<int>
                                  lat1::<double> lon1::<double>
                                  azi1::<double> s12::<double>)
@@ -91,11 +116,8 @@
         (result (SCM_LIST2 (Scm_MakeFlonum azi1)
                            (Scm_MakeFlonum s12)))))))
  '(geod_direct_c geod_inverse_c)
- :cflags #`"-I,(current-directory)"
- :libs (string-join (list (string-append "-L" (current-directory))
-                          "-lgeodwrapper"
-                          (string-append "-Wl,-rpath="
-                                         (current-directory)))))
+ :cc "c++"
+ :libs "-lGeographic")
 
 (define (geod-direct s p az dist)
   (geod_direct_c (spheroid->int s) (cadr p) (car p) az dist))
