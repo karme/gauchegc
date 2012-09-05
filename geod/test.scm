@@ -1,6 +1,6 @@
 #!/bin/sh
 #| -*- mode: scheme; coding: utf-8; -*- |#
-:; exec gosh -I. -- $0 "$@"
+:; exec gosh -I. -I../runtime-compile -- $0 "$@"
 
 (use gauche.sequence)
 (use srfi-1)
