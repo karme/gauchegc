@@ -3,6 +3,7 @@
 :; exec gosh -I. -- $0 "$@"
 (use gauche.test)
 (use gauche.time)
+(use gauche.uvector)
 (test-start "runtime-compile")
 (use runtime-compile)
 (test-module 'runtime-compile)
@@ -67,5 +68,25 @@
               (result (Scm_MakeFlonum (* 2 x)))))
           '(twice))
          (equal? (twice 2) 4.0)))
+
+;; note: basically assuming gcc here
+(test* "c++"
+       -10.0
+       (begin
+         (cise-compile-and-load
+          `((declcode
+             (.include |<algorithm>|)
+             ("using namespace std;"))
+            (define-cproc c++sort!
+              (v::<f64vector>)
+              ::<f64vector>
+              (sort (SCM_F64VECTOR_ELEMENTS v) (+ (SCM_F64VECTOR_ELEMENTS v) (SCM_F64VECTOR_SIZE v)))
+              (result v)))
+          '(c++sort!)
+          :cc "c++"
+          :ld "c++" ;; ;;:libs "-lstdc++"
+          )
+         (let1 v (list->f64vector '(2 3 0 9 10 100 -10 2000))
+           #?=(~ (c++sort! v) 0))))
 
 (test-end)
