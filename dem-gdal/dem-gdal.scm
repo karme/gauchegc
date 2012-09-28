@@ -41,6 +41,7 @@
 ;;   http://www.gdal.org/formats_list.html
 ;; - a more general purpose gdal wrapper would be nice
 ;;   (upload to gl texture ...)
+;; - use GDAL_CACHEMAX?
 (define-module dem-gdal
   (use srfi-1)
   (use gauche.collection) ;; use after srfi-1 to make find work as expected!
