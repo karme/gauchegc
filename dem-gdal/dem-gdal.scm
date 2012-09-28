@@ -272,6 +272,10 @@
                                         (+ (ref tl 0) 2)))
               '(0 1))))))
 
+(define (gdal-read-band-pixel read-band-row raster-pos)
+  (let1 p (map round->exact raster-pos)
+    (f32vector-ref (read-band-row (cadr p) (car p) (+ (car p) 1)) 0)))
+
 (define gdal-init
   (let1 called #f
     (lambda()
@@ -330,6 +334,7 @@
       (case interpolation
         ((bi-cubic)  (compose-xy->z interp-bicubic gdal-read-band-4x4))
         ((bi-linear) (compose-xy->z interp-bilinear gdal-read-band-2x2))
+        ((nearest)   (compose-xy->z identity (compose list gdal-read-band-pixel)))
         (else (error "Unknown interpolation:" interpolation))))))
 
 ;; return function to get z value at position x y (using coordinate system of the dataset)
