@@ -90,4 +90,10 @@
               (let1 z (dem->xy-project->z "epsg:4326" *vrt-file* #f)
                 (z 8.29151 48.87847))))
 
+(test* "nearest"
+       '(158.0 158.0 155.0 560.0 738.0 649.0)
+       (let1 z (dem->xy-project->z "epsg:4326" *vrt-file* #f 'nearest)
+         (map (cut apply z <>) '((8 49) (8.000416666666666 49) (8.000833333333333 49)
+                                 (8 48) (9 48) (10 48)))))
+
 (test-end :exit-on-failure #t)
