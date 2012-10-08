@@ -34,6 +34,7 @@
   (use gauche.process)
   (use file.util)
   (use util.list)
+  (use gauche.sequence)
   (export svg-plot))
 
 (select-module svg-plot)
@@ -61,17 +62,27 @@
                                                     n)) x))))
             l))
 
-(define (svg-plot l . args)
-  (let-optionals* args ((title #f))
+(define (svg-plot ll . args)
+  (let-optionals* args ((title #f)
+                        (hook #f))
     (with-output-to-gnuplot
      (lambda()
+       (print "set terminal svg mouse") ;; size 800, 600 fname \"Sans\" fsize 8")
        (print "set style data linespoints")
-       (print "set terminal svg") ;; size 800, 600 fname \"Sans\" fsize 8")
        ;;(print "set grid")
-       (print (string-append "plot \"-\""
-                             (if title
-                               #`" title \",|title|\""
-                               " notitle")))
-       (list->data-file l)
-       (print "e")
+       (when (procedure? hook) (hook))
+       (print (string-append "plot "
+                             (string-join
+                              (map-with-index (lambda(idx l)
+                                                (string-append "\"-\""
+                                                               (if (and title
+                                                                        (string? (ref title idx #f)))
+                                                                 #`" title \",(ref title idx)\""
+                                                                 " notitle")))
+                                              ll)
+                              ",")))
+       (for-each (lambda(l)
+                   (list->data-file l)
+                   (print "e"))
+                 ll)
        (print "exit")))))
