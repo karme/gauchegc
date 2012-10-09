@@ -53,7 +53,9 @@
   (export dem->xy->z   
           dem->xy-project->z
           dem-range-error?  ;; outside of dataset area => range error
-          dem-nodata-error? ;; inside of dataset but no data at that point => nodata error (is a range error, too)
+          ;; inside of dataset but no data at that point
+          ;; => nodata error (is a range error, too - todo: does that make sense?)
+          dem-nodata-error?
           ))
 
 (select-module dem-gdal)
@@ -197,6 +199,7 @@
 (define-condition-type <dem-range-error> <error>
   dem-range-error?)
 
+;; todo: really subclass of dem-range-error?
 (define-condition-type <dem-nodata-error> <dem-range-error>
   dem-nodata-error?)
 
@@ -286,11 +289,11 @@
             [else
              #f]))))
 
-(define (nan-on-dem-range-error proc)
+(define (on-dem-range-error nodata proc)
   (lambda l
     (guard (e
             [(dem-range-error? e)
-             +nan.0]
+             nodata]
             [else
              (raise e)])
            (apply proc l))))
@@ -304,14 +307,14 @@
 
 ;; return function to get z value at position x y (using coordinate system described by projection)
 (define (dem->xy-project->z projection name . args)
-  (let-optionals* args ((use-nan? #t) ;; use nan to represent nodata or throw error?
+  (let-optionals* args ((nodata +nan.0) ;; nodata value or #f to throw error
 			(interpolation 'bi-cubic)
                         (band 1))
     (let* ((dataset (gdal-open-dataset name))
            (band (gdal-open-band dataset band))
            (compose-xy->z (lambda(fi fg)
-                            (let1 p ((if use-nan?
-                                       nan-on-dem-range-error
+                            (let1 p ((if nodata
+                                       (cut on-dem-range-error nodata <>)
                                        (lambda(proc) proc))
                                      (apply compose
                                             (reverse
