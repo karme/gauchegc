@@ -91,32 +91,34 @@
 (define (svg-plot-3d ll . args)
   (let-optionals* args ((title #f)
                         (hook #f))
-    (with-output-to-gnuplot
-     (lambda()
-       (print "set terminal svg mouse") ;; size 800, 600 fname \"Sans\" fsize 8")
-       ;; (print "set linetype 1 lc rgb \"red\"")
-       ;; (print "set linetype 2 lc rgb \"black\"")
-       (print "set hidden3d trianglepattern 7")
-       (print "set style data linespoints")
-       (when #f
-         (print "set pm3d at s depthorder hidden3d")
-         (print "unset surf"))
-       (when (procedure? hook) (hook))
-       (print (string-append "splot "
-                             (string-join
-                              (map-with-index (lambda(idx l)
-                                                (string-append "\"-\""
-                                                               (if (and title
-                                                                        (string? (ref title idx #f)))
-                                                                 #`" title \",(ref title idx)\""
-                                                                 " notitle")))
-                                              ll)
-                              ",")))
-       (for-each (lambda(l)
-                   (for-each (lambda(x)
-                               (list->data-file x)
-                               (print))
-                             l)
-                   (print "e"))
-                 ll)
-       (print "exit")))))
+    (let1 proc (lambda()
+                 (print "set terminal svg mouse") ;; size 800, 600 fname \"Sans\" fsize 8")
+                 ;; (print "set linetype 1 lc rgb \"red\"")
+                 ;; (print "set linetype 2 lc rgb \"black\"")
+                 (print "set hidden3d trianglepattern 7")
+                 (print "set style data lines")
+                 (when #f
+                   (print "set pm3d at s depthorder hidden3d")
+                   (print "unset surf"))
+                 (when (procedure? hook) (hook))
+                 (print (string-append "splot "
+                                       (string-join
+                                        (map-with-index (lambda(idx l)
+                                                          (string-append "\"-\""
+                                                                         (if (and title
+                                                                                  (string? (ref title idx #f)))
+                                                                           #`" title \",(ref title idx)\""
+                                                                           " notitle")))
+                                                        ll)
+                                        ",")))
+                 (for-each (lambda(l)
+                             (for-each (lambda(x)
+                                         (list->data-file x)
+                                         (print))
+                                       l)
+                             (print "e"))
+                           ll)
+                 (print "exit"))
+      (with-output-to-gnuplot proc)
+      ;; (with-output-to-file "/tmp/debug" proc)
+      )))
