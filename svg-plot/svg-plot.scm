@@ -40,9 +40,17 @@
 
 (select-module svg-plot)
 
+;; (define (with-output-to-gnuplot x)
+;;   (let* ((p (run-process '(gnuplot) :input :pipe :output (current-output-port)))
+;;          (r (with-output-to-port (process-input p) x)))
+;;     (process-wait p)
+;;     r))
+
+;; work around string output port troubles
 (define (with-output-to-gnuplot x)
-  (let* ((p (run-process '(gnuplot) :input :pipe :output (current-output-port)))
+  (let* ((p (run-process '(gnuplot) :input :pipe :output :pipe))
          (r (with-output-to-port (process-input p) x)))
+    (copy-port (process-output p) (current-output-port))
     (process-wait p)
     r))
 
@@ -64,11 +72,12 @@
             l))
 
 (define (svg-plot ll . args)
-  (let-optionals* args ((title #f)
-                        (hook #f))
+  (let-keywords args ((titles #f)
+                      (hook #f)
+                      (size #f))
     (with-output-to-gnuplot
      (lambda()
-       (print "set terminal svg mouse") ;; size 800, 600 fname \"Sans\" fsize 8")
+       (print "set terminal svg mouse" (if size (string-append " size " (string-join (map x->string size) ",")) ""))
        (print "set style data linespoints")
        ;;(print "set grid")
        (when (procedure? hook) (hook))
@@ -76,9 +85,9 @@
                              (string-join
                               (map-with-index (lambda(idx l)
                                                 (string-append "\"-\""
-                                                               (if (and title
-                                                                        (string? (ref title idx #f)))
-                                                                 #`" title \",(ref title idx)\""
+                                                               (if (and titles
+                                                                        (string? (ref titles idx #f)))
+                                                                 #`" title \",(ref titles idx)\""
                                                                  " notitle")))
                                               ll)
                               ",")))
@@ -89,10 +98,11 @@
        (print "exit")))))
 
 (define (svg-plot-3d ll . args)
-  (let-optionals* args ((title #f)
-                        (hook #f))
+  (let-keywords args ((titles #f)
+                      (hook #f)
+                      (size #f))
     (let1 proc (lambda()
-                 (print "set terminal svg mouse") ;; size 800, 600 fname \"Sans\" fsize 8")
+                 (print "set terminal svg mouse" (if size (string-append " size " (string-join (map x->string size) ",")) ""))
                  ;; (print "set linetype 1 lc rgb \"red\"")
                  ;; (print "set linetype 2 lc rgb \"black\"")
                  (print "set hidden3d trianglepattern 7")
@@ -105,9 +115,9 @@
                                        (string-join
                                         (map-with-index (lambda(idx l)
                                                           (string-append "\"-\""
-                                                                         (if (and title
-                                                                                  (string? (ref title idx #f)))
-                                                                           #`" title \",(ref title idx)\""
+                                                                         (if (and titles
+                                                                                  (string? (ref titles idx #f)))
+                                                                           #`" title \",(ref titles idx)\""
                                                                            " notitle")))
                                                         ll)
                                         ",")))
