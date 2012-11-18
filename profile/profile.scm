@@ -80,7 +80,8 @@
                     "~s\n"
                     (cons `(time ,(time->string start-time))
                           ci))
-         (parameterize ([(with-module profile *call-stack*) (cons '?form (with-module profile (*call-stack*)))])
+         (parameterize ([(with-module profile *call-stack*) (cons (list (car (assoc-ref ci 'source)) '?form)
+                                                                  (with-module profile (*call-stack*)))])
            (guard (e [else
                       (let ((end-time (current-time)))
                         (format/ss (current-error-port)
