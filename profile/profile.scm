@@ -1,5 +1,21 @@
 ;;; profile
 ;;;
+;;; simple high-level "exact" and explicit profiling via debug macro
+;;; note: see also gauche (1) -ptype / -ptime for different approach
+;;; and maybe take a look at:
+;;; https://en.wikipedia.org/wiki/List_of_performance_analysis_tools
+;;;
+;;; todo: ideally output would be some existing profile output format
+;;; maybe something like valgrind's callgrind format
+;;; http://kcachegrind.sourceforge.net/html/CallgrindFormat.html
+;;; on the other hand the typical profiler collects less information
+;;; than this one for performance reasons
+;;;
+;;; notes:
+;;; - measured times are wallclock times
+;;;   (heavy system load, gc times, ... might result in misleading
+;;;   results! always take care when interpreting profiling output)
+;;;
 ;;;   Copyright (c) 2010-2012 Jens Thiele <karme@karme.de>
 ;;;   based on debugger.scm
 ;;;   Copyright (c) 2000-2012  Shiro Kawai  <shiro@acm.org>
@@ -30,7 +46,6 @@
 ;;;   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 ;;;   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 ;;;   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 
 (define-module profile
   (use srfi-19)
@@ -87,7 +102,7 @@
                                            `((results ,vals))
                                            '())))
                       (apply values vals))))))))))
-  
+
 ;; global change to debug print? uh!
 (define (profile-global-hack)
   (let1 x debug-print 
