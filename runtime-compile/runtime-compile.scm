@@ -94,11 +94,11 @@
     (unwind-protect
      (begin
        ;; fake make to let emacs know we changed directory
-       (eprint #`"runtime-compile: Entering directory `,|name|'")
+       ;;(eprint #`"runtime-compile: Entering directory `,|name|'")
        (current-directory name)
        (thunk))
      (begin
-       (eprint #`"runtime-compile: Leaving directory `,|name|'")
+       ;;(eprint #`"runtime-compile: Leaving directory `,|name|'")
        (current-directory old-dir)))))
 
 (define (cat x)
