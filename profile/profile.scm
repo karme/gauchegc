@@ -45,6 +45,13 @@
 (define (time->string t)
   (date->string (time-utc->date t) "~1 ~T.~N~z"))
 
+;; todo: simpler way to detect wether object is serializable?
+(define (serializable? x)
+  (guard (e [else
+             #f])
+         (isomorphic? (read-from-string (write/ss-to-string x))
+                      x)))
+
 (define-syntax debug-print
   (syntax-rules ()
     ((_ ?form)
@@ -75,8 +82,10 @@
                                  "~s\n"
                                  (append (cons `(time ,(time->string end-time))
                                                ci)
-                                         `((runtime ,(time->seconds (time-difference end-time start-time)))
-                                           (results ,vals))))
+                                         `((runtime ,(time->seconds (time-difference end-time start-time))))
+                                         (if (serializable? vals)
+                                           `((results ,vals))
+                                           '())))
                       (apply values vals))))))))))
   
 ;; global change to debug print? uh!
