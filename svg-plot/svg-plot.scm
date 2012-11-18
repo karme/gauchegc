@@ -1,5 +1,5 @@
 ;;;
-;;; simple SVG 2d plot using gnuplot
+;;; simple SVG plot using gnuplot
 ;;;
 ;;;   Copyright (c) 2012 Jens Thiele <karme@karme.de>
 ;;;   
@@ -60,7 +60,6 @@
   ;; - what about rational/complex numbers?
   ;; - better raise an error?
   ;; - use binary data-file format?
-  ;; - do not use temporary file (just use -) ?
   (for-each (lambda(x)
               (apply print
                      (intersperse " "
@@ -97,6 +96,7 @@
                  ll)
        (print "exit")))))
 
+;; todo: nearly duplicate
 (define (svg-plot-3d ll . args)
   (let-keywords args ((titles #f)
                       (hook #f)
