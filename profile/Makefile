@@ -1,6 +1,8 @@
 srcdir=.
+#CFLAGS=-pg -ggdb -O0
 
-all: profile-summary.svg profile-summary.txt
+# gprof.out
+all: profile-summary.svg profile-summary.txt callgrind.out
 	see profile-summary.svg
 	cat profile-summary.txt
 
@@ -20,4 +22,16 @@ profile-summary.ge: profile-data.scm
 	dot $< -Tsvg -o $@
 
 clean:
-	rm -vf profile-data.scm
+	rm -vf profile-data.scm ctest
+
+gmon.out: ctest
+	./ctest
+
+gprof.out: gmon.out
+	gprof ./ctest > $@
+	cat $@
+
+callgrind.out: ctest
+	valgrind --tool=callgrind --callgrind-out-file=$@ ./ctest
+	callgrind_annotate --inclusive=yes $@
+#	kcachegrind ./ctest $@
