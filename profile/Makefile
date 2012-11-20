@@ -2,15 +2,10 @@ srcdir=.
 #CFLAGS=-pg -ggdb -O0
 
 # gprof.out
-all: profile-summary.svg profile-summary.txt callgrind.out
-	see profile-summary.svg
-	cat profile-summary.txt
+all: profile-summary.out
 
-profile-data.scm: test.scm
-	$(srcdir)/$<  -vv 2> $@
-
-profile-summary.ge: profile-data.scm
-	$(srcdir)/profile-summary.scm < $< $@
+profile-summary.out: test.scm
+	./test.scm -vv  2>&1 >/dev/null|$(srcdir)/profile-summary.scm|tee $@
 
 %.txt : %.ge
 	graph-easy --as boxart $< > $@
@@ -22,7 +17,7 @@ profile-summary.ge: profile-data.scm
 	dot $< -Tsvg -o $@
 
 clean:
-	rm -vf profile-data.scm ctest
+	rm -vf profile-summary.out ctest
 
 gmon.out: ctest
 	./ctest
