@@ -32,11 +32,12 @@
   (sort (filter boolean
                 (map (lambda(l)
                        (let1 times (filter boolean
-                                           (map (lambda(x) (car (assoc-ref x 'runtime '(#f)))) l))
+                                           (map (lambda(x)
+                                                  (car (assoc-ref x 'runtime '(#f)))) l))
                          (if (null? times)
                            #f
                            `((source ,(car (assoc-ref (car l) 'source)))
-                             (count ,(size-of l))
+                             (count ,(size-of times))
                              (total-time ,(apply + times))
                              (min-time ,(apply min times))
                              (max-time ,(apply max times))
@@ -91,7 +92,7 @@
                         #f)))
          (node->string (lambda(n)
                          (string-append "[ " (node-name n)
-                                        " "
+                                        "\\n"
                                         (if-let1 ns (node-stats n)
                                           (string-append "("
                                                          (string-join
@@ -104,7 +105,7 @@
                                           )
                                         " ]"))))
     (with-output-to-process
-     '(sh -c "graph-easy --as dot|dot -Tsvg")
+     '(sh -c "graph-easy --as dot|dot -Tsvg -Gsize=10,12 -Gratio=auto")
      ;;'(cat)
      (lambda()
        (print "graph{flow:south}")
@@ -127,17 +128,17 @@
 (define (main args)
   (let ((all '())
         (start-time (current-time))
-        (update-interval 2))
+        (update-interval #f))
     (while (read) (compose not eof-object?) => l
            (push! all l)
-           (let1 end-time (current-time)
-             (when (> (time->seconds (time-difference end-time start-time)) update-interval)
-               (set! start-time end-time)
-               (clear-terminal)
-               ;; todo: might be slower than update-interval ;-)
-               (print-totals all)
-               (print-graph all)
-               )))
+           (when update-interval
+             (let1 end-time (current-time)
+               (when (> (time->seconds (time-difference end-time start-time)) update-interval)
+                 (set! start-time end-time)
+                 (clear-terminal)
+                 ;; todo: might be slower than update-interval ;-)
+                 (print-totals all)
+                 (print-graph all)))))
     (print-totals all)
     (print-graph all))
   0)
