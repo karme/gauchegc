@@ -17,10 +17,16 @@ fi
 (use foo)
 (use bar)
 
+(define (factorial n)
+  (if (= n 1)
+    1
+    #?=(* n (factorial (- n 1)))))
+
 (define (test)
   #?=(+ 2 3)
   #?=(foo-proc)
   #?=(bar-proc "k" "l")
+  #?=(factorial 10)
   (guard (e [else #f])
          #?=(bar-error-proc)))
 
