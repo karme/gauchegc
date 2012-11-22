@@ -5,6 +5,7 @@
 (use util.queue)
 (use gauche.process)
 (use srfi-19)
+(use util.list)
 
 (define (avg . l)
   (/ (apply + l) (size-of l)))

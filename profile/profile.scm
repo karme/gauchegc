@@ -49,6 +49,7 @@
 
 (define-module profile
   (use srfi-19)
+  (use util.list) ;; for assoc-ref in older gauche versions
   (use gauche.parameter)
   (export debug-print
           profile-global-hack))
