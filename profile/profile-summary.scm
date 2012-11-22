@@ -74,6 +74,14 @@
                                  (car (assoc-ref e 'target))))
                     :test equal?))
 
+(define (with-output-to-graph-easy x)
+  (let* ((p (run-process '(sh -c "graph-easy --as dot|dot -Tsvg -Gsize=10,12 -Gratio=auto")
+                         :input :pipe :output :pipe))
+         (r (with-output-to-port (process-input p) x))) ;; todo: might block
+    (copy-port (process-output p) (current-output-port))
+    (process-wait p)
+    r))
+
 (define (print-graph all)
   (let* ((node-name (lambda(n)
                       (if (car n)
@@ -105,9 +113,7 @@
                                           "" ; todo
                                           )
                                         " ]"))))
-    (with-output-to-process
-     '(sh -c "graph-easy --as dot|dot -Tsvg -Gsize=10,12 -Gratio=auto")
-     ;;'(cat)
+    (with-output-to-graph-easy
      (lambda()
        (print "graph{flow:south}")
        (for-each (lambda(edges)
@@ -123,8 +129,7 @@
                               "")
                             "\"; } "
                             (node->string (car (assoc-ref (car edges) 'target))))))
-                 (callgraph-edges all)))
-     :output (current-output-port))))
+                 (callgraph-edges all))))))
 
 (define (main args)
   (let ((all '())
