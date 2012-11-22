@@ -78,6 +78,7 @@
   (let* ((p (run-process '(sh -c "graph-easy --as dot|dot -Tsvg -Gsize=10,12 -Gratio=auto")
                          :input :pipe :output :pipe))
          (r (with-output-to-port (process-input p) x))) ;; todo: might block
+    (close-output-port (process-input p))
     (copy-port (process-output p) (current-output-port))
     (process-wait p)
     r))
