@@ -80,12 +80,12 @@
 
 (define (stats-by-source all)
   (sort (map (lambda(l)
-               (let1 times (map (lambda(x)
-                                  (car (assoc-ref x 'runtime)))
-                                l)
+               (let ((times (map (lambda(x) (car (assoc-ref x 'runtime))) l))
+                     (gc-runs (map (lambda(x) (car (assoc-ref x 'gc-runs))) l)))
                  `((source ,(profile->node (car l)))
                    (count ,(size-of times))
                    (total-time ,(apply + times))
+                   (total-gc-runs ,(apply + gc-runs))
                    (min-time ,(apply min times))
                    (max-time ,(apply max times))
                    (avg-time ,(apply avg times)))))
@@ -113,11 +113,15 @@
         (total-time ,(apply + (map (lambda(e)
                                      (car (assoc-ref e 'runtime)))
                                    x)))
+        (total-gc-runs ,(apply + (map (lambda(e)
+                                        (car (assoc-ref e 'gc-runs)))
+                                      x)))
         (parts ,x)))
     (group-collection (map (lambda(x)
                              `((source ,(car (profile->stack-nodes x)))
                                (target ,(profile->node x))
-                               (runtime ,(car (assoc-ref x 'runtime)))))
+                               (runtime ,(car (assoc-ref x 'runtime)))
+                               (gc-runs ,(car (assoc-ref x 'gc-runs)))))
                            (filter (lambda(x)
                                      (car (assoc-ref x 'runtime '(#f))))
                                    all))
@@ -158,7 +162,8 @@
                                                          (string-join
                                                           (list
                                                            #`"cnt=,(car (assoc-ref ns 'count))"
-                                                           #`"t=,(runtime->string (car (assoc-ref ns 'total-time)))")
+                                                           #`"t=,(runtime->string (car (assoc-ref ns 'total-time)))"
+                                                           #`"gcs=,(car (assoc-ref ns 'total-gc-runs))")
                                                           ",")
                                                          ")")
                                           "" ; todo
@@ -176,6 +181,7 @@
                             (if-let1 nt (node-time (car (assoc-ref edge 'source)))
                               #`"(,(round->exact (* (/ et nt) 100))%)"
                               "")
+                            #`", gcs=,(car (assoc-ref edge 'total-gc-runs))"
                             "\"; } "
                             (node->string (car (assoc-ref edge 'target))))))
                  (callgraph-edges all))))))

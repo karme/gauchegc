@@ -8,7 +8,7 @@ DEBUG_VERBOSE_GLOBAL=1
 export DEBUG_VERBOSE_GLOBAL
 fi        
 # |#
-:; exec gosh -I. $DEBUG -- $0 "$@"
+:; exec gosh -I. -I../runtime-compile -I../gc-hack $DEBUG -- $0 "$@"
 
 ;; uh :-(
 (when (sys-getenv "DEBUG_VERBOSE_GLOBAL")
@@ -26,12 +26,16 @@ fi
 (define (f3)
   #?=(factorial 3))
 
+(define (rungc)
+  (gc))
+  
 (define (test)
   #?=(+ 2 3)
   #?=(foo-proc)
   #?=(bar-proc "k" "l")
   #?=(factorial 4)
   #?=(f3)
+  #?=(rungc)
   (guard (e [else #f])
          #?=(bar-error-proc))
   )

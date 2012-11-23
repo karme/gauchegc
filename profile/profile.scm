@@ -51,6 +51,7 @@
   (use srfi-19)
   (use util.list) ;; for assoc-ref in older gauche versions
   (use gauche.parameter)
+  (use gc-hack)
   (export debug-print
           profile-global-hack))
 
@@ -76,7 +77,8 @@
        (let ((ci `((source ,(debug-source-info '?form))
                    (pid ,(sys-getpid))
                    (form ,'?form)
-                   (stack ,(with-module profile (*call-stack*))))))
+                   (stack ,(with-module profile (*call-stack*)))
+                   (gc-no ,(gc-get-gc-no)))))
          (format/ss (current-error-port)
                     "~s\n"
                     (cons `(time ,(time->string start-time))
@@ -84,22 +86,26 @@
          (parameterize ([(with-module profile *call-stack*) (cons (list (car (assoc-ref ci 'source)) '?form)
                                                                   (with-module profile (*call-stack*)))])
            (guard (e [else
-                      (let ((end-time (current-time)))
+                      (let ((end-time (current-time))
+                            (end-gc-no (gc-get-gc-no)))
                         (format/ss (current-error-port)
                                    "~s\n"
                                    (append (cons `(time ,(time->string end-time))
                                                  ci)
                                            `((runtime ,(time->seconds (time-difference end-time start-time)))
+                                             (gc-runs ,(- end-gc-no (car (assoc-ref ci 'gc-no))))
                                              (error ,(ref e 'message)) ;; todo: only available if error object
                                              ))))
                       (raise e)])
                   (receive vals ?form
-                    (let ((end-time (current-time)))
+                    (let ((end-time (current-time))
+                          (end-gc-no (gc-get-gc-no)))
                       (format/ss (current-error-port)
                                  "~s\n"
                                  (append (cons `(time ,(time->string end-time))
                                                ci)
-                                         `((runtime ,(time->seconds (time-difference end-time start-time))))
+                                         `((runtime ,(time->seconds (time-difference end-time start-time)))
+                                           (gc-runs ,(- end-gc-no (car (assoc-ref ci 'gc-no)))))
                                          (if (serializable? vals)
                                            `((results ,vals))
                                            '())))
