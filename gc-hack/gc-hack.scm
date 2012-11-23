@@ -1,6 +1,6 @@
 #| -*- mode: scheme; coding: utf-8; -*- |#
 ;;;
-;;; hack to make some gc functions available
+;;; hack to make some gc functions available in scheme
 ;;;
 ;;; Copyright (C) 2010-2012 Jens Thiele <karme@karme.de>
 ;;;
