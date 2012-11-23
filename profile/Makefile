@@ -5,8 +5,11 @@ CFLAGS=-ggdb -O0
 # gprof.out
 all: profile-summary.out
 
-profile-summary.out: test.scm
-	./test.scm -vv  2>&1 >/dev/null|$(srcdir)/profile-summary.scm|tee $@
+profile.log: test.scm
+	./test.scm -vv  >/dev/null 2> $@
+
+profile-summary.out: profile.log
+	< $< $(srcdir)/profile-summary.scm|tee $@
 
 %.txt : %.ge
 	graph-easy --as boxart $< > $@
