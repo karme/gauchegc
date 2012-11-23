@@ -18,17 +18,23 @@ fi
 (use bar)
 
 (define (factorial n)
+  (sys-sleep 1)
   (if (= n 1)
     1
     #?=(* n (factorial (- n 1)))))
+
+(define (f3)
+  #?=(factorial 3))
 
 (define (test)
   #?=(+ 2 3)
   #?=(foo-proc)
   #?=(bar-proc "k" "l")
-  #?=(factorial 10)
+  #?=(factorial 4)
+  #?=(f3)
   (guard (e [else #f])
-         #?=(bar-error-proc)))
+         #?=(bar-error-proc))
+  )
 
 (define (main args)
   #?=(test)

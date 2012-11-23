@@ -1,5 +1,6 @@
 srcdir=.
 #CFLAGS=-pg -ggdb -O0
+CFLAGS=-ggdb -O0
 
 # gprof.out
 all: profile-summary.out
@@ -28,5 +29,6 @@ gprof.out: gmon.out
 
 callgrind.out: ctest
 	valgrind --tool=callgrind --callgrind-out-file=$@ ./ctest
-	callgrind_annotate --inclusive=yes $@
+	callgrind_annotate --inclusive=yes --tree=both $@
+#	callgrind_annotate --inclusive=yes --tree=caller callgrind.out
 #	kcachegrind ./ctest $@

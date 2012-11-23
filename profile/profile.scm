@@ -75,7 +75,7 @@
            (start-time (current-time)))
        (let ((ci `((source ,(debug-source-info '?form))
                    (pid ,(sys-getpid))
-                   (form (,'?form))
+                   (form ,'?form)
                    (stack ,(with-module profile (*call-stack*))))))
          (format/ss (current-error-port)
                     "~s\n"
