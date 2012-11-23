@@ -37,7 +37,10 @@
       (set! _callback (SCM_OBJ callback))
       (GC_set_warn_proc my_warn_proc))
     (define-cproc gc-get-gc-no ()
-      (result (SCM_MAKE_INT (GC_call_with_alloc_lock (cast GC_fn_type GC_get_gc_no) 0))))))
+      (result GC_gc_no)
+      ;; newer gauche
+      ;;(result (SCM_MAKE_INT (GC_call_with_alloc_lock (cast GC_fn_type GC_get_gc_no) 0)))
+      )))
  '(gc-set-warn-proc gc-get-gc-no))
 
 (define gc-set-warn-proc gc-set-warn-proc)
