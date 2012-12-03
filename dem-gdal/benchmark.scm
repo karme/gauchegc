@@ -33,7 +33,32 @@ test -z "$MOD" && MOD="dem-gdal"
         (list->vector (list-tabulate cnt (lambda _ (list (+ 8.0 (*. (/. (sys-random) RAND_MAX) 2.0))
                                                          (+ 48.0 (/. (sys-random) RAND_MAX))))))
       (benchmark cnt (lambda(i)
-                       ;; (let1 p (vector-ref test-data i) #?=(append p (list (apply z p))))
-                       (apply z (vector-ref test-data i))
-                       ))))
+                       (apply z (vector-ref test-data i))))))
+  (let ((z (dem-stack->xy->z "epsg:4326" '(("N48E008_utm.tif") ("lores.tif"))))
+        (cnt 5000))
+    (benchmark cnt (lambda _ (z 8.5 48.5)))
+    (let1 test-data
+        (list->vector (list-tabulate cnt (lambda _ (list (+ 8.0 (*. (/. (sys-random) RAND_MAX) 2.0))
+                                                         (+ 48.0 (/. (sys-random) RAND_MAX))))))
+      (benchmark cnt (lambda(i)
+                       (apply z (vector-ref test-data i))))))
+  (let ((z (dem-stack->xy->z "epsg:4326" (map (lambda(x)
+                                                (list (string-append
+                                                       ;; "/home/karme/mnt/jupiter/var/www/freedem/data/"
+                                                       "/vsicurl/http://karme.de/freedem/data/"
+                                                       x)))
+                                              '("srtm1_east.tif"
+                                                "srtm1_west.tif"
+                                                "srtm3.tif"
+                                                "gmted2010_mn30.tif"
+                                                "gmted2010_mn75_fixed.tif"
+                                                ))))
+        (cnt 5000))
+    (benchmark cnt (lambda _ (z 8.5 48.5)))
+    (let1 test-data
+        (list->vector (list-tabulate cnt (lambda _ (list (+ 8.0 (*. (/. (sys-random) RAND_MAX) 2.0))
+                                                         (+ 48.0 (/. (sys-random) RAND_MAX))))))
+      (benchmark cnt (lambda(i)
+                       (apply z (vector-ref test-data i))))))
   0)
+
