@@ -12,7 +12,8 @@ fi
 
 ;; uh :-(
 (when (sys-getenv "DEBUG_VERBOSE_GLOBAL")
-  (profile-global-hack))
+  (profile-global-hack)
+  (set! (port-buffering (current-error-port)) :full))
 
 (use foo)
 (use bar)
