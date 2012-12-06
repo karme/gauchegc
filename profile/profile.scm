@@ -52,6 +52,7 @@
   (use util.list) ;; for assoc-ref in older gauche versions
   (use gauche.parameter)
   (use gc-hack)
+  (use util.isomorph)
   (export debug-print
           profile-global-hack))
 
@@ -62,9 +63,13 @@
 (define (time->string t)
   (date->string (time-utc->date t) "~1 ~T.~N~z"))
 
+(define (write/ss-to-string x)
+  (with-output-to-string (lambda() (write/ss x))))
+
 ;; todo: simpler way to detect wether object is serializable?
 (define (serializable? x)
   (guard (e [else
+             ;;#?=e
              #f])
          (isomorphic? (read-from-string (write/ss-to-string x))
                       x)))
