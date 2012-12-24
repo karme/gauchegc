@@ -3,6 +3,11 @@
 #|
 exec gosh -I. -I../sequencer "$0" "$@"
 |#
+
+;;;
+;;; simple test using wiimote to make some "music"
+;;;
+
 (use gl)
 (use gl.glut)
 (use wiimote)
