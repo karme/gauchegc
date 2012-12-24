@@ -363,6 +363,7 @@ typedef struct wiimote cwiid_wiimote_t;
 
 cwiid_wiimote_t *cwiid_open(bdaddr_t *bdaddr, int flags);
 int cwiid_close(cwiid_wiimote_t *wiimote);
+int cwiid_enable(cwiid_wiimote_t *wiimote, int flags);
 int cwiid_set_rpt_mode(cwiid_wiimote_t *wiimote, uint8_t rpt_mode);
 int cwiid_get_state(cwiid_wiimote_t *wiimote, struct cwiid_state *state);
 int cwiid_get_balance_cal(struct wiimote *wiimote,

@@ -8,7 +8,13 @@
 
 (select-module balance-board)
 
-(c-load "cwiid_clean_subset.h"
+(c-load (string-append (string-join (list "cwiid"
+                                          (package-version "cwiid")
+                                          "bluez"
+                                          (package-version "bluez")
+                                          "subset")
+                                    "_")
+                       ".h")
         :cflags "-I."
         :libs-cmd "sh -c 'echo -L/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH) $(pkg-config --libs cwiid)'")
 

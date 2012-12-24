@@ -1,14 +1,26 @@
 (define-module wiimote
   (use c-wrapper)
   (use gauche.collection)
+  (use gauche.process)
   (use util.list)
   (export wiimote-open
 	  wiimote-get-state
 	  wiimote-close))
 
 (select-module wiimote)
-(c-load "bluetooth/bluetooth.h" :libs-cmd "pkg-config --libs bluez")
-(c-load "cwiid.h" :libs-cmd "pkg-config --libs cwiid" :module #f)
+
+(define (package-version p)
+  (process-output->string `(pkg-config --modversion ,p)))
+
+(c-load (string-append (string-join (list "cwiid"
+                                          (package-version "cwiid")
+                                          "bluez"
+                                          (package-version "bluez")
+                                          "subset")
+                                    "_")
+                       ".h")
+        :cflags "-I."
+        :libs-cmd "sh -c 'echo -L/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH) $(pkg-config --libs cwiid)'")
 
 (define BDADDR_ANY (strtoba "00:00:00:00:00:00"))
 
