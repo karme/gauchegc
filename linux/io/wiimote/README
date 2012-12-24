@@ -1,0 +1,16 @@
+-*- mode: org; coding: utf-8; -*-
+
+Using wiimote with gauche on linux via bluetooth using cwiid.
+
+Notes:
+
+* c-wrapper can't parse the bluetooth headers anymore
+  as workaround a parsable subset is used
+  As safeguard to make sure the headers match the complete versions are
+  used in the header filename.
+  If you have a different version either provide your own version or
+  make sure the declarations match.
+  
+Todos:
+
+* merge balanceboard and wiimote directory
