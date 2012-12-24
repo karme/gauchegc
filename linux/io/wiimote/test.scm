@@ -14,7 +14,7 @@
 		    (let1 s (wiimote-get-state b)
                       ;;#?=s
                       ;; works
-                      ;;#?=(map x->number (ref s 'acc))
+                      #?=(map x->number (ref s 'acc))
                       (let1 ir (filter boolean
                                        (map (lambda(src)
                                               (if (zero? (ref src 'valid))
