@@ -5,7 +5,9 @@
   (use util.list)
   (export wiimote-open
 	  wiimote-get-state
-	  wiimote-close))
+	  wiimote-close
+          wiimote-state->battery
+          ))
 
 (select-module wiimote)
 
@@ -42,9 +44,13 @@
                                          CWIID_RPT_BTN
                                          CWIID_RPT_ACC
                                          CWIID_RPT_IR
-                                         CWIID_RPT_MOTIONPLUS))
+                                         CWIID_RPT_MOTIONPLUS
+                                         CWIID_RPT_NUNCHUK
+                                         ))
           (cwiid_enable (assoc-ref r 'wii) CWIID_FLAG_MOTIONPLUS)
           (sys-nanosleep 0.5e9))
+        ;;#?=CWIID_EXT_NUNCHUK ;; 1
+        ;;#?=CWIID_EXT_MOTIONPLUS ;; 4
         r))
 
 (define (wiimote-get-state handle)
@@ -55,3 +61,6 @@
 
 (define (wiimote-close handle)
   (cwiid_close (assoc-ref handle 'wii)))
+
+(define (wiimote-state->battery state)
+  (/. (* (ref state 'battery) 100) CWIID_BATTERY_MAX))

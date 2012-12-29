@@ -15,6 +15,11 @@
                       ;;#?=s
                       ;; works
                       #?=(map x->number (ref s 'acc))
+                      ;; nunchuck?!
+                      ;; conflict with motion plus?!
+                      #?=(ref s 'ext_type)
+                      #?=(ref* s 'ext 'nunchuk 'stick)
+                      #?=(wiimote-state->battery s)
                       (let1 ir (filter boolean
                                        (map (lambda(src)
                                               (if (zero? (ref src 'valid))
