@@ -170,9 +170,9 @@
 
 (define (make-huge-sparse-bitmap filename
                                  :key
-                                 (slot-size 1024)
+                                 (slot-size 512)
                                  (key-code 'base32)
-                                 (value-code 'zip-2)
+                                 (value-code 'base32)
                                  (cache-size 16)
                                  )
   
