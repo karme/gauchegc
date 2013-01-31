@@ -43,7 +43,7 @@
   (use dbm.gdbm)
   (use binary.pack)
   (use gauche.collection)
-  ;;(use sxml.adaptor) ;; for assert
+  (use sxml.adaptor) ;; for assert
   (use rfc.zlib)
   (use lru-cache)
   (export make-huge-sparse-bitmap
@@ -56,7 +56,7 @@
 (select-module huge-sparse-bitmap)
 
 ;; disable assert
-(define-macro (assert e) )
+;;(define-macro (assert e) )
 
 (define (enc-ber n)
   (assert (exact? n))
@@ -102,6 +102,26 @@
 
 (define enc-base32 (cute number->string <> 32))
 (define dec-base32 (cute string->number <> 32))
+
+;; note: must be a otherwise invalid key!
+;; all allowed key decoding routings must fail!
+;; => disallow bin and ber as key encoding for now (see below)
+(define-constant *meta-key* "_M")
+
+(assert (not (guard (e [else #f])
+                    (dec-zip *meta-key*))))
+
+(assert (not (guard (e [else #f])
+                    (dec-zip-2 *meta-key*))))
+
+;; (assert (not (guard (e [else #f])
+;;                     (dec-ber *meta-key*))))
+
+;; (assert (not (guard (e [else #f])
+;;                     (dec-bin *meta-key*))))
+
+(assert (not (guard (e [else #f])
+                    (dec-base32 *meta-key*))))
 
 ;; (define enc number->string)
 ;; (define dec string->number)
@@ -158,7 +178,21 @@
   
   ;;#?=(list slot-size key-code value-code cache-size)
   (let ((db (dbm-open <gdbm> :path filename :rw-mode :write)))
+    ;; load options from db if it already exists
+    (if-let1 meta (dbm-get db *meta-key* #f)
+      (receive (s k v)
+          (apply values (read-from-string meta))
+        (unless (and (= s slot-size)
+                     (eq? k key-code)
+                     (eq? v value-code))
+          ;; todo: we really should use db meta data as defaults
+          (error "options don't match db"))))
+    ;; save options to db
+    (dbm-put! db *meta-key* (write-to-string (list slot-size key-code value-code)))
     (receive (enc-key dec-key) (encode&decode key-code)
+      ;; disallow bin and ber as key encoding (see above)
+      (when (member key-code '(ber bin))
+        (error "not allowed as key-code " key-code))
       (receive (enc-value dec-value) (encode&decode value-code)
         (let ((read-slot-value (lambda(k)
                                  (assert (exact? k))
