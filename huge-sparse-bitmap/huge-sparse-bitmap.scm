@@ -46,6 +46,7 @@
   (use sxml.adaptor) ;; for assert
   (use rfc.zlib)
   (use lru-cache)
+  (use util.list)
   (export make-huge-sparse-bitmap
           huge-sparse-bitmap-get-bit
           huge-sparse-bitmap-set-bit!
