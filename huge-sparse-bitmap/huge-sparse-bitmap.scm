@@ -175,10 +175,11 @@
                                  (key-code 'base32)
                                  (value-code 'base32)
                                  (cache-size 16)
+                                 (rw-mode :write)
                                  )
   
   ;;#?=(list slot-size key-code value-code cache-size)
-  (let ((db (dbm-open <gdbm> :path filename :rw-mode :write)))
+  (let ((db (dbm-open <gdbm> :path filename :rw-mode rw-mode)))
     ;; load options from db if it already exists
     (if-let1 meta (dbm-get db *meta-key* #f)
       (receive (s k v)
@@ -189,7 +190,8 @@
           ;; todo: we really should use db meta data as defaults
           (error "options don't match db"))))
     ;; save options to db
-    (dbm-put! db *meta-key* (write-to-string (list slot-size key-code value-code)))
+    (when (not (eq? rw-mode :read))
+      (dbm-put! db *meta-key* (write-to-string (list slot-size key-code value-code))))
     (receive (enc-key dec-key) (encode&decode key-code)
       ;; disallow bin and ber as key encoding (see above)
       (when (member key-code '(ber bin))
