@@ -1,0 +1,6 @@
+gauche's xml/sxml handling using sxml.serializer/sxml.tools/sxml.ssax
+is really nice but sometimes it is just to slow.
+
+in this directory are native code xml<->sxml streaming converters for
+cases where you need speed (and low memory usage!)
+
