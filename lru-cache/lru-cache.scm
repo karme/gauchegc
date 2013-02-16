@@ -36,6 +36,7 @@
 (define-module lru-cache
   ;;(use sxml.adaptor) ;; for assert
   ;;(use gauche.sequence)
+  (use util.list)
   (export make-lru-cache))
 
 (select-module lru-cache)
