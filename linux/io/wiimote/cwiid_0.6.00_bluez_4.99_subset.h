@@ -366,5 +366,7 @@ int cwiid_close(cwiid_wiimote_t *wiimote);
 int cwiid_enable(cwiid_wiimote_t *wiimote, int flags);
 int cwiid_set_rpt_mode(cwiid_wiimote_t *wiimote, uint8_t rpt_mode);
 int cwiid_get_state(cwiid_wiimote_t *wiimote, struct cwiid_state *state);
+int cwiid_get_acc_cal(struct wiimote *wiimote, enum cwiid_ext_type ext_type,
+                      struct acc_cal *acc_cal);
 int cwiid_get_balance_cal(struct wiimote *wiimote,
                           struct balance_cal *balance_cal);
