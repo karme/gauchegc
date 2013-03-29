@@ -9,6 +9,8 @@
   (use input)
   (use file.util)
   (use font)
+  (use srfi-19)
+  (use gc-hack)
   (define (main args)
     (unwind-protect
      (begin
@@ -25,6 +27,9 @@
     (let1 video-backend (if #t
                           "video-sdl"
                           "video-osmesa")
+      (sys-setenv "GC_PRINT_STATS" "1")
+      (sys-setenv "GC_ENABLE_INCREMENTAL" "1")
+      (sys-setenv "GC_PAUSE_TIME_TARGET" "5")
       (run-process #?=(cons 'gosh
                             (append `(
                                       -fload-verbose
@@ -34,6 +39,7 @@
                                       -I../sdl
                                       -I../input
                                       -I../ftgl
+                                      -I../gc-hack
                                       )
                                     (list (car args))
                                     ;; todo: filter parsed args
@@ -60,6 +66,11 @@
   (and (list? e)
        (member key (assoc-ref (cadr e) 'modifiers))))
 
+(define (float-format f)
+  (when (< f 0) (error "todo"))
+  (receive (q r) (quotient&remainder (round->exact (* f 100)) 100)
+    (format #f "~d.~2'0d" q r)))
+
 (define (main-2 args)
   (receive (w h)
       (apply values (gl-get-size))
@@ -69,29 +80,54 @@
           (quit? #f)
           ;; todo: use fontconfig
           (draw-string (font-get-string 'ftgl "/usr/share/fonts/truetype/unifont/unifont.ttf" 24))
-          (string-bbox (font-get-string-bbox 'ftgl "/usr/share/fonts/truetype/unifont/unifont.ttf" 24)))
+          (string-bbox (font-get-string-bbox 'ftgl "/usr/share/fonts/truetype/unifont/unifont.ttf" 24))
+          (frames 0)
+          (start-time (current-time))
+          (frames-missed 0))
       (let* ((some-text "Hello friend of (), λ and gauche (ゴーシュ) scheme ☻")
-             (text-height (cadr (string-bbox some-text))))
+             (text-height (cadr (string-bbox some-text)))
+             (newline (cute gl-translate 0 (- text-height) 0))
+             (last-time #f))
         (while (not quit?)
-          (while (input-poll-event) => e
-                 (when (list? e)
-                   (case (car e)
-                     [(quit)
-                      (set! quit? #t)]
-                     [(resized)
-                      (gl-set-size! (cadr e) (caddr e))
-                      (set! w (cadr e))
-                      (set! h (caddr e))
-                      (on-resize w h)]))
-                 (when (key? e 'K_ESCAPE)
-                   (set! quit? #t)))
-          (gl-clear GL_COLOR_BUFFER_BIT)
-          (gl-rect x 0 (+ x 10) h)
-          (gl-push-matrix*
-           (gl-translate (modulo (* 2 x) w) (modulo x h) 0)
-           (draw-string some-text)
-           (gl-translate 0 (- text-height) 0)
-           (draw-string (format #f "~s∈ℕ" x)))
-          (gl-swap-buffers)
-          (set! x (modulo (+ x 1) w))))))
+          (let* ((new-time (current-time))
+                 (uptime (time-difference new-time start-time)))
+            (while (input-poll-event) => e
+                   (when (list? e)
+                     (case (car e)
+                       [(quit)
+                        (set! quit? #t)]
+                       [(resized)
+                        (gl-set-size! (cadr e) (caddr e))
+                        (set! w (cadr e))
+                        (set! h (caddr e))
+                        (on-resize w h)]))
+                   (when (key? e 'K_ESCAPE)
+                     (set! quit? #t)))
+            (gl-clear GL_COLOR_BUFFER_BIT)
+            (gl-rect x 0 (+ x 10) h)
+            (gl-push-matrix*
+             (gl-translate (modulo (* 2 x) w) (modulo x h) 0)
+             (draw-string some-text)
+             (newline)
+             (draw-string #`",|x|∈ℕ")
+             (newline)
+             (let1 s (time->seconds uptime)
+               (draw-string (format #f "~s frames in ~a seconds ⇒ ~a frames/s"
+                                    frames
+                                    (float-format s)
+                                    (float-format (/ frames s)))))
+             (newline)
+             ;; try to estimate number of missed frames
+             (when (> x 100)
+               (let ((frame-time (time->seconds (time-difference new-time last-time)))
+                     (avg-frame-time (/ (time->seconds uptime) frames)))
+                 (when (> (/ frame-time avg-frame-time) 1.5)
+                   (inc! frames-missed #?=(- (round->exact (/ frame-time avg-frame-time)) 1)))))
+             (draw-string #`",|frames-missed| frames missed (likely due to gc)")
+             (newline)
+             (draw-string #`",(gc-get-gc-no) gc runs"))
+            (gl-swap-buffers)
+            (set! last-time new-time)
+            (inc! frames)
+            (set! x (modulo (+ x 1) w)))))))
   0)
