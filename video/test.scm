@@ -7,6 +7,8 @@
   (use gl-setup)
   (use gl)
   (use input)
+  (use file.util)
+  (use font)
   (define (main args)
     (unwind-protect
      (begin
@@ -25,12 +27,13 @@
                           "video-osmesa")
       (run-process #?=(cons 'gosh
                             (append `(
-                                      ;; -fload-verbose
+                                      -fload-verbose
                                       -Frecursed
                                       ,#`"-F,|video-backend|"
                                       -I.
                                       -I../sdl
                                       -I../input
+                                      -I../ftgl
                                       )
                                     (list (car args))
                                     ;; todo: filter parsed args
@@ -63,7 +66,9 @@
     (gl-disable GL_DEPTH_TEST)
     (on-resize w h)
     (let ((x 0)
-          (quit? #f))
+          (quit? #f)
+          ;; todo: use fontconfig
+          (draw-string (font-get-string 'ftgl "/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf" 24)))
       (while (not quit?)
         (while (input-poll-event) => e
                (when (list? e)
@@ -79,6 +84,7 @@
                  (set! quit? #t)))
         (gl-clear GL_COLOR_BUFFER_BIT)
         (gl-rect x 0 (+ x 10) h)
+        (draw-string (format #f "hello world öäß€ ~s" x))
         (gl-swap-buffers)
         (set! x (modulo (+ x 1) w)))))
   0)
