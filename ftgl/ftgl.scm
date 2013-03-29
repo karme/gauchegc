@@ -71,12 +71,12 @@
 
 (define (ftgl-load-font font-name font-size)
   (let1 font
-      ;; (ftglCreateTextureFont font-name)
+      ;;(ftglCreateTextureFont font-name)
+      ;;(ftglCreatePolygonFont font-name)
+      ;;(ftglCreateOutlineFont font-name)
       (ftglCreateBufferFont font-name)
-      (when (null-ptr? font)
-        (error "failed to load font" font-name font-size))
-    ;; (ftglCreatePolygonFont font-name)
-    ;; (ftglCreateOutlineFont font-name)
+    (when (null-ptr? font)
+      (error "failed to load font" font-name font-size))
     (ftgl-check-error font)
     (ftglSetFontFaceSize font font-size font-size)
     (ftgl-check-error font)
