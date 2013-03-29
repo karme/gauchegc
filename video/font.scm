@@ -55,7 +55,6 @@
        (cut ftgl-render-font font <>)
        (lambda(s)
          (let1 ret (ftgl-get-font-advance font s)
-           (ftgl-check-error font)           
            (list
             ret
             font-height)))))))
