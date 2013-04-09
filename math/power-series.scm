@@ -5,26 +5,6 @@
 (use gauche.generator)
 (use gauche.process)
 
-(define (power x n)
-  (define (power-2 x n)
-    (if (zero? n)
-      1
-      (* x (power-2 x (- n 1)))))
-
-  (assert (and (exact? n)) (>= n 0))
-  (power-2 x n))
-
-(define (factorial n)
-  (define (factorial-2 n)
-    (if (zero? n)
-      1
-      (* n (factorial-2 (- n 1)))))
-  
-  (assert (and (exact? n)) (>= n 0))
-  (factorial-2 n))
-
-(define ! factorial)
-
 (define (power-sequence-gen x)
   (gunfold (^s #f) (^s s) (^s (* s x)) 1))
 
