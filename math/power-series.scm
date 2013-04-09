@@ -3,86 +3,117 @@
 :; exec gosh -I. -- $0 "$@"
 (use sxml.adaptor) ;; for assert
 (use gauche.generator)
+(use gauche.process)
 
 (define (power x n)
+  (define (power-2 x n)
+    (if (zero? n)
+      1
+      (* x (power-2 x (- n 1)))))
+
   (assert (and (exact? n)) (>= n 0))
-  (if (zero? n)
-    1
-    (* x (power x (- n 1)))))
+  (power-2 x n))
 
 (define (factorial n)
+  (define (factorial-2 n)
+    (if (zero? n)
+      1
+      (* n (factorial-2 (- n 1)))))
+  
   (assert (and (exact? n)) (>= n 0))
-  (if (zero? n)
-    1
-    (* n (factorial (- n 1)))))
+  (factorial-2 n))
 
 (define ! factorial)
 
-(define (power-series-v1 x)
-  (define (gen)
-    (let1 c 1
-      (lambda()
-        (let1 r c
-          (set! c (* c x))
-          r))))
-  (generator->lseq (gen)))
-
-(define (power-series-gen x)
+(define (power-sequence-gen x)
   (gunfold (^s #f) (^s s) (^s (* s x)) 1))
 
-(define (factorial-series-gen)
+(define (factorial-sequence-gen)
   (gunfold (^s #f)
            (^s (car s))
            (^s (cons (* (car s) (cdr s))
                      (+ (cdr s) 1)))
            (cons 1 1)))
 
-(define (exp-series-gen x)
-  (gmap / (power-series-gen x) (factorial-series-gen)))
-
-(define (approximate-exp-v1 x prec)
-  ((rec (f x n maxn)
-        (if (>= n maxn)
-          0
-          (+ (/ (power x n) (! n)) (f x (+ n 1) maxn))))
-   x 0 prec))
+(define (exp-sequence-gen x)
+  (gmap / (power-sequence-gen x) (factorial-sequence-gen)))
 
 (define ∑ (cute generator-fold + 0 <>))
 
 ;; todo: more sensible precision logic?!
 (define (approximate-exp x prec)
-  (∑ (gtake (exp-series-gen x) prec)))
+  (∑ (gtake (exp-sequence-gen x) prec)))
 
-;; todo: generator versions
+(define (sin-sequence-gen x)
+  (gunfold (^s #f)
+           (^s (car s))
+           (^s (cons (/ (* -1 (car s) x x)
+                        (* (- (cdr s) 1) (cdr s)))
+                     (+ (cdr s) 2)))
+           (cons x 3)))
 
 (define (approximate-sin x prec)
-  ((rec (f x n maxn)
-        (if (>= n maxn)
-          0
-          (+ (* (if (even? n) 1 -1)
-                (/ (power x (+ (* 2 n) 1))
-                   (! (+ (* 2 n) 1))))
-             (f x (+ n 1) maxn))))
-   x 0 prec))
+  (∑ (gtake (sin-sequence-gen x) prec)))
+
+(define (cos-sequence-gen x)
+  (gunfold (^s #f)
+           (^s (car s))
+           (^s (cons (/ (* -1 (car s) x x)
+                        (* (- (cdr s) 1) (cdr s)))
+                     (+ (cdr s) 2)))
+           (cons 1 2)))
 
 (define (approximate-cos x prec)
-  ((rec (f x n maxn)
-        (if (>= n maxn)
-          0
-          (+ (* (if (even? n) 1 -1)
-                (/ (power x (* 2 n))
-                   (! (* 2 n))))
-             (f x (+ n 1) maxn))))
-   x 0 prec))
+  (∑ (gtake (cos-sequence-gen x) prec)))
+
+;; todo: note: truncating!
+(define (print-rational e . args)
+  (let-optionals* args ((prec 30)
+                        (base 10))
+    (define (print-rational-2 e prec base i)
+      (receive (q r) (quotient&remainder (numerator e) (denominator e))
+        (display (number->string q base))
+        (when (zero? i) (display "."))
+        (when (> prec 0)
+          (print-rational-2 (* (/ r (denominator e)) base) (- prec 1) base (+ i 1)))))
+
+    (assert (exact? e))
+    (when (< e 0)
+      (display "-"))
+    (print-rational-2 (abs e) prec base 0)
+    (newline)))
+
+(define (bc x . args)
+  (let-optionals* args ((scale 30))
+    (call-with-process-io '(bc -l)
+                          (lambda(in out)
+                            (with-ports in out #f
+                                        (lambda()
+                                          (print #`"scale=,scale")
+                                          (print x)
+                                          (let1 r (read-line)
+                                            (print "quit")
+                                            r)))))))
 
 (define (main args)
-  #?=(approximate-exp 1 100)
-  #?=(inexact (approximate-exp 1 100))
-  #?=(exp 1)
-  #?=(approximate-sin 3 100)
-  #?=(inexact (approximate-sin 3 100))
-  #?=(sin 3)
-  #?=(approximate-cos 3 100)
-  #?=(inexact (approximate-cos 3 100))
-  #?=(cos 3)
-  0)
+  (let1 prec 31
+    (print-rational 2/3)
+    (print (bc "2/3"))
+    (print (inexact 2/3))
+    
+    (print-rational (approximate-exp 1 prec))
+    (print (bc "e(1)"))
+    (print (exp 1))
+    
+    (print-rational (approximate-sin 3 prec))
+    (print (bc "s(3)"))
+    (print (sin 3))
+    
+    (print-rational (approximate-cos 3 prec))
+    (print (bc "c(3)"))
+    (print (cos 3))
+    
+    (print-rational (approximate-cos (+ 3 1/10) prec))
+    (print (bc "c(3.1)"))
+    (print (cos 3.1)))
+0)
