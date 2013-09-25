@@ -35,23 +35,23 @@
 ;;; - rename to huge-sparse-persistent-bitmap?
 ;;; - allow to use without filename (create temporary db?!)
 ;;; - or maybe constructor should take dbm object instead of filename?
-;;;   (or dict object? what about sync?)
+;;;   (or dict object?)
 ;;; - use gauche's object system?
 ;;;
 
 (define-module huge-sparse-bitmap
-  (use dbm.gdbm)
-  (use binary.pack)
+  (use dbm)
+  (use binary.pack) ;; danger: old gauche version is broken
   (use gauche.collection)
   (use sxml.adaptor) ;; for assert
-  (use rfc.zlib)
+  (use rfc.zlib) ;; danger: old gauche version is broken
   (use lru-cache)
   (use util.list)
-  (export make-huge-sparse-bitmap
+  (export huge-sparse-bitmap-open
+          huge-sparse-bitmap-close
           huge-sparse-bitmap-get-bit
           huge-sparse-bitmap-set-bit!
           huge-sparse-bitmap-unset-bit!
-          huge-sparse-bitmap-sync
           ))
 
 (select-module huge-sparse-bitmap)
@@ -169,7 +169,8 @@
                       (base32 . (,enc-base32 ,dec-base32)))
                     name)))
 
-(define (make-huge-sparse-bitmap filename
+(define (huge-sparse-bitmap-open dbm-class
+                                 filename
                                  :key
                                  (slot-size 512)
                                  (key-code 'base32)
@@ -179,7 +180,7 @@
                                  )
   
   ;;#?=(list slot-size key-code value-code cache-size)
-  (let ((db (dbm-open <gdbm> :path filename :rw-mode rw-mode)))
+  (let ((db (dbm-open dbm-class :path filename :rw-mode rw-mode)))
     ;; load options from db if it already exists
     (if-let1 meta (dbm-get db *meta-key* #f)
       (receive (s k v)
@@ -231,20 +232,15 @@
               (receive (q r) (quotient&remainder b slot-size)
                 (slot-get-bit (read-slot q) r)))
             
-            (define sync
+            (define close
               (let1 cache-sync (assoc-ref cache 'sync (lambda ()))
                 (lambda()
                   (cache-sync)
-                  ;; todo: generic dbm api is missing sync
-                  ;; how to sync db then?
-                  ;; we can only close and re-open?
-                  ;; for now use gdbm specific api
-                  (assert (ref db 'gdbm-file))
-                  (gdbm-sync (ref db 'gdbm-file)))))
+                  (dbm-close db))))
             
             `((set!  . ,set-bit!)
               (get   . ,get-bit)
-              (sync  . ,sync))))))))
+              (close . ,close))))))))
 
 (define (huge-sparse-bitmap-get-bit bm b)
   ((assoc-ref bm 'get) b))
@@ -255,5 +251,5 @@
 (define (huge-sparse-bitmap-unset-bit! bm b)
   ((assoc-ref bm 'set!) b #f))
 
-(define (huge-sparse-bitmap-sync bm)
-  ((assoc-ref bm 'sync)))
+(define (huge-sparse-bitmap-close bm)
+  ((assoc-ref bm 'close)))

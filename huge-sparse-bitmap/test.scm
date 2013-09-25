@@ -5,9 +5,10 @@
 (test-start "huge-sparse-bitmap")
 (use huge-sparse-bitmap)
 (test-module 'huge-sparse-bitmap)
+(use dbm.gdbm)
 
 (define (test-sequence l r)
-  (let* ((bm (make-huge-sparse-bitmap "bitmap.dbm"))
+  (let* ((bm (huge-sparse-bitmap-open <gdbm> "bitmap.dbm"))
          (get-bit (cute huge-sparse-bitmap-get-bit bm <>))
          (set-bit! (cute huge-sparse-bitmap-set-bit! bm <> #t))
          (unset-bit! (cute huge-sparse-bitmap-set-bit! bm <> #f))
@@ -18,7 +19,7 @@
                             (cadr x)))))
     (for-each do-op l)
     (let1 r (map do-op r)
-      (huge-sparse-bitmap-sync bm) ;; don't forget to sync! (todo: at least do that on gc?!)
+      (huge-sparse-bitmap-close bm) ;; don't forget to close! (todo: at least do that on gc?!)
       r)))
 
 (sys-unlink "bitmap.dbm")
