@@ -2,7 +2,7 @@
 ;;; mercator projections
 ;;; written to thank Peter Osborne for his fine article
 ;;; "THE MERCATOR PROJECTIONS"
-;;; http://mercator.myzen.co.uk
+;;; http://www.mercator99.webspace.virginmedia.com/
 ;;;
 ;;;   Copyright (c) 2013 Jens Thiele <karme@karme.de>
 ;;;   
