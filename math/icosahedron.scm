@@ -65,7 +65,7 @@
                   (apply array (cons (shape 0 3 0 1) (vec- a p))))))
 
 (define plane-line-intersection plane-line-intersection-scm)
-  
+
 (define (triangle-line-intersection a b c p r)
   (guard (e
           [else
@@ -149,7 +149,7 @@
                         (,ab ,bc, ca))))]
               [else
                '()])))
-  
+
 ;; (define (s l) (apply spherical (map (cute * <> default-radius) l)))
 ;;#?=(/ (apply great-circle-distance (map (compose (cute subseq <> 0 2) s) (list (cadr vl) (caddr vl)))) 1000)
 ;;(map (lambda(a b) #?=(/ (* (acos (dot-product a b)) default-radius) 1000)) vl (append (subseq vl 1 3) (list (car vl))))
@@ -238,11 +238,11 @@
                                                              ;; works ok for higher resolutions
                                                              (let1 tc (gl-to-tex-coord v)
                                                                (let1 tc (cond [last-tex-coord
-                                                                               #?=(norm (vec- tc last-tex-coord))
-                                                                               #?=(norm (vec- (vec+ tc '(1 0))
-                                                                                              last-tex-coord))
-                                                                               #?=(norm (vec- (vec+ tc '(-1 0))
-                                                                                              last-tex-coord))
+                                                                               (norm (vec- tc last-tex-coord))
+                                                                               (norm (vec- (vec+ tc '(1 0))
+                                                                                           last-tex-coord))
+                                                                               (norm (vec- (vec+ tc '(-1 0))
+                                                                                           last-tex-coord))
                                                                                (map(lambda(d x)
                                                                                      (cond [(> d 0.5)
                                                                                             (- x 1)]
@@ -263,9 +263,9 @@
                                             [else
                                              (gl-begin GL_TRIANGLES)
                                              (for-each (lambda(v)
-                                                           (let1 f32v (vector->f32vector v)
-                                                             (gl-normal f32v)
-                                                             (gl-vertex f32v)))
+                                                         (let1 f32v (vector->f32vector v)
+                                                           (gl-normal f32v)
+                                                           (gl-vertex f32v)))
                                                        (car x))
                                              (gl-end)])
                                           (when selected
@@ -336,7 +336,7 @@
 
 (define (main args)
   (glut-init args)
-  (let ((depth 0)
+  (let ((depth 2)
         (grid 0)
         (light 0)
         (color 0))
@@ -403,6 +403,7 @@
     (simple-viewer-window 'test
                           ;;:mode (logior GLUT_DOUBLE GLUT_DEPTH GLUT_RGB GLUT_MULTISAMPLE)
                           )
+    (glut-full-screen)
     (simple-viewer-run) ; loop till window close
     )
   0)
