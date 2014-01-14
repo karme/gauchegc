@@ -47,12 +47,14 @@
 
 (defvar svg-output-filter-buf '() "buffer to collect svg")
 ;;(defvar svg-start "<svg")
+;; todo: namespace prefix?!
 (defvar svg-start "\\\(<svg\\\)\\\|\\\(<\\\?xml\\\)")
-
+;; todo: allow any namespace prefix?
+(defvar svg-end "</\\(svg:\\)?svg>")
 (defun svg-output-filter-svg-end (s)
   "process end of svg: insert image and empty svg-output-filter-buf buffer"
   ;;(message "found end of svg")
-  (let ((epos (+ (string-match "</svg>" s) (length "</svg>"))))
+  (let ((epos (match-end 0)))
     (setq svg-output-filter-buf (cons (substring s 0 epos) svg-output-filter-buf))
     (insert-image (create-image (apply 'concat (reverse svg-output-filter-buf)) 'svg 1))
     (set-marker (process-mark (get-buffer-process (current-buffer))) (point)) ;; todo: hmm
@@ -73,7 +75,7 @@
 		    (setq svg-output-filter-buf (list buf))
 		    (substring s 0 spos))))))
 	((and svg-output-filter-buf
-	      (string-match "</svg>" s))
+	      (string-match svg-end s))
 	 (svg-output-filter-svg-end s))
 	(svg-output-filter-buf
 	 (setq svg-output-filter-buf (cons s svg-output-filter-buf))
