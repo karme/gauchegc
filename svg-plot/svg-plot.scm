@@ -51,7 +51,7 @@
   (let* ((p (run-process '(gnuplot) :input :pipe :output :pipe))
          (r (with-output-to-port (process-input p) x)))
     (copy-port (process-output p) (current-output-port))
-    (process-wait p)
+    (process-wait p #f #t)
     r))
 
 (define (list->data-file l)
