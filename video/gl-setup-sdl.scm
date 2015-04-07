@@ -79,6 +79,9 @@
   (list (ref (SDL_GetVideoSurface) 'w)
         (ref (SDL_GetVideoSurface) 'h)))
 
+(define (warning s)
+  (with-output-to-port (current-error-port) (cute print <>)))
+    
 (define (gl-open :key
                  (fullscreen #t)
                  (width 0)
@@ -86,17 +89,19 @@
                  (title "gl-setup"))
   (when (not (zero? (SDL_Init (logior SDL_INIT_VIDEO SDL_INIT_NOPARACHUTE))))
     (sdl-error))
-  #?=(SDL_GL_SetAttribute SDL_GL_DOUBLEBUFFER 1)
-  #?=(SDL_GL_SetAttribute SDL_GL_SWAP_CONTROL 1)
+  (SDL_GL_SetAttribute SDL_GL_DOUBLEBUFFER 1)
+  (SDL_GL_SetAttribute SDL_GL_SWAP_CONTROL 1)
   (SDL_WM_SetCaption title "")
   ;; sdl disables dpms
   ;; (run-process "xset" "+dpms")
   (let1 ret (gl-set-size! 0 0 :fullscreen fullscreen)
     (let ((val (make <c-int>)))
-      #?=(SDL_GL_GetAttribute SDL_GL_DOUBLEBUFFER (ptr val))
-      #?=val
-      #?=(SDL_GL_GetAttribute SDL_GL_SWAP_CONTROL (ptr val))
-      #?=val)
+      (SDL_GL_GetAttribute SDL_GL_DOUBLEBUFFER (ptr val))
+      (when (not (= 1 (cast <number> val)))
+        (warning "no double buffer"))
+      (SDL_GL_GetAttribute SDL_GL_SWAP_CONTROL (ptr val))
+      (when (not (= 1 (cast <number> val)))
+        (warning "no swap control")))
     ret))
 
 (define (gl-close)
