@@ -52,6 +52,9 @@
          (r (with-output-to-port (process-input p) x)))
     (copy-port (process-output p) (current-output-port))
     (process-wait p #f #t)
+    ;; note: explicitly close ports because otherwise close only happens on gc
+    (close-input-port (process-output p))
+    (close-output-port (process-input p))
     r))
 
 (define (list->data-file l)
