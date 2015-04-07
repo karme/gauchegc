@@ -27,23 +27,23 @@
     (let1 video-backend (if #t
                           "video-sdl"
                           "video-osmesa")
-      (sys-setenv "GC_PRINT_STATS" "1")
+      ;;(sys-setenv "GC_PRINT_STATS" "1")
       (sys-setenv "GC_ENABLE_INCREMENTAL" "1")
       (sys-setenv "GC_PAUSE_TIME_TARGET" "5")
-      (run-process #?=(cons 'gosh
-                            (append `(
-                                      -fload-verbose
-                                      -Frecursed
-                                      ,#`"-F,|video-backend|"
-                                      -I.
-                                      -I../sdl
-                                      -I../input
-                                      -I../ftgl
-                                      -I../gc-hack
-                                      )
-                                    (list (car args))
-                                    ;; todo: filter parsed args
-                                    (cdr args)))
+      (run-process (cons 'gosh
+                         (append `(
+                                   ;; -fload-verbose
+                                   -Frecursed
+                                   ,#`"-F,|video-backend|"
+                                   -I.
+                                   -I../sdl
+                                   -I../input
+                                   -I../ftgl
+                                   -I../gc-hack
+                                   )
+                                 (list (car args))
+                                 ;; todo: filter parsed args
+                                 (cdr args)))
                    :fork #f)))))
 
 (define (on-resize w h)
@@ -59,7 +59,7 @@
 (define (key? e key)
   (and (list? e)
        (eq? (car e) 'key-down)
-       (eq? (assoc-ref (cadr #?=e) 'symname)
+       (eq? (assoc-ref (cadr e) 'symname)
             key)))
 
 (define (mod-key? e key)
@@ -125,7 +125,7 @@
                (let ((frame-time (time->seconds (time-difference new-time last-time)))
                      (avg-frame-time (/ (time->seconds uptime) frames)))
                  (when (> (/ frame-time avg-frame-time) 1.5)
-                   (inc! frames-missed #?=(- (round->exact (/ frame-time avg-frame-time)) 1)))))
+                   (inc! frames-missed (- (round->exact (/ frame-time avg-frame-time)) 1)))))
              (draw-string #`",|frames-missed| frames missed (likely due to gc)")
              (newline)
              (draw-string #`",(gc-get-gc-no) gc runs"))
