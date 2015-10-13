@@ -31,6 +31,7 @@
 ;;;   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ;;;
 ;;; todo: maybe just port http://docs.racket-lang.org/math/stats.html
+;;; or http://api.call-cc.org/doc/statistics
 ;;;
 ;;; note/remember: also did write more complex generator versions
 ;;; (median was ok, but quantile was still missing)
