@@ -31,7 +31,17 @@
                             l)))
                  ;; printer
                  (lambda l
-                   (apply serialize l)
+                   (guard (e [(<error> e)
+                              ;; todo:
+                              ;; - loosing too much information, here
+                              ;; - at least provide a stack trace
+                              ;; - how preserve error subclass?
+                              (serialize
+                               (make <serializable-error> :message (ref e 'message)))]
+                             [else
+                              (serialize
+                               (make <serializable-error> :message "unkown serialization error"))])
+                          (apply serialize l))
                    (flush))
                  ;; prompter
                  (lambda _ )))
@@ -54,6 +64,11 @@
     (writeln ((assoc-ref e 'eval) '(+ 1 2 3))))
   (let1 e (make-evaluator :host "localhost")
     (writeln ((assoc-ref e 'eval) '(+ 1 2 3))))
+  (guard (e [else
+             #?=e
+             ])
+         (let1 e (make-evaluator :host "localhost")
+           (writeln ((assoc-ref e 'eval) 'kkk))))
   (let1 e (make-evaluator :host "localhost")
-    (writeln ((assoc-ref e 'eval) 'kkk)))
+    (writeln ((assoc-ref e 'eval) '(undefined))))
   0)
