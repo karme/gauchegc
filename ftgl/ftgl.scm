@@ -42,7 +42,7 @@
 (select-module ftgl)
 (c-load '("FTGL/ftgl.h")
         :cppflags-cmd "pkg-config --cflags ftgl"
-        :libs-cmd "pkg-config --libs ftgl"
+        :libs-cmd "sh -c 'echo -L/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH) $(pkg-config --libs ftgl)'"
         :module #f)
 
 (define (ftgl-check-error font)
