@@ -28,7 +28,7 @@
                           "video-sdl"
                           "video-osmesa")
       ;;(sys-setenv "GC_PRINT_STATS" "1")
-      (sys-setenv "GC_ENABLE_INCREMENTAL" "1")
+      ;;(sys-setenv "GC_ENABLE_INCREMENTAL" "1")
       (sys-setenv "GC_PAUSE_TIME_TARGET" "5")
       (run-process (cons 'gosh
                          (append `(
@@ -69,7 +69,7 @@
 (define (float-format f)
   (when (< f 0) (error "todo"))
   (receive (q r) (quotient&remainder (round->exact (* f 100)) 100)
-    (format #f "~d.~2'0d" q r)))
+    (format #f "~d.~2,'0d" q r)))
 
 (define (main-2 args)
   (receive (w h)
