@@ -29,6 +29,7 @@
 (define (wiimote-open)
   (let1 r `((wii   . ,(cwiid_open BDADDR_ANY 0))
 	    (state . ,(make <c-struct:cwiid_state>))
+            ;;(cal . ,(make <c-struct:acc_cal>))
 	    ;;(cal   . ,(make <c-struct:balance_cal>))
             )
 	(when (null-ptr? (assoc-ref r 'wii))
@@ -49,6 +50,8 @@
                                          ))
           (cwiid_enable (assoc-ref r 'wii) CWIID_FLAG_MOTIONPLUS)
           (sys-nanosleep 0.5e9))
+        ;; (cwiid_get_acc_cal (assoc-ref r 'wii) CWIID_EXT_MOTIONPLUS (ptr (assoc-ref r 'cal)))
+        ;; #?=(assoc-ref r 'cal)
         ;;#?=CWIID_EXT_NUNCHUK ;; 1
         ;;#?=CWIID_EXT_MOTIONPLUS ;; 4
         r))
