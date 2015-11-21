@@ -59,6 +59,19 @@ exec gosh -I. -I../runtime-compile -- $0 "$@"
               (ref r 2) (ref r 6) (ref r 10) 0
               (ref p 0) (ref p 1) (ref p  2) 1)))
 
+(define (anaglyph-paint paint)
+  (lambda()
+    (gl-color-mask #t #f #f #t)
+    (gl-push-matrix*
+     (gl-translate -0.02 0 0)
+     (paint))
+    (gl-color-mask #f #t #t #t)
+    (gl-push-matrix*
+     (gl-translate 0.02 0 0)
+     (paint))
+    ;; todo: restore
+    (gl-color-mask #t #t #t #t)))
+
 (define (main args)
   (dInitODE2 0)
   (let ((world (dWorldCreate))
@@ -100,18 +113,20 @@ exec gosh -I. -I../runtime-compile -- $0 "$@"
              (iota (- CHAIN 1)))
         
         (glut-init (list))
+        #?=simple-viewer-display
         (simple-viewer-display
-         (lambda()
-           (for-each
-            (lambda(b)
-              (gl-push-matrix*
-               (gl-mult-matrix
-                ;; todo: locking?!
-                (ode-body->matrix (ref* b 0)))
-               (glut-wire-sphere RADIUS 10 5)
-               ;;(glut-solid-sphere RADIUS 10 10)
-               ))
-            bodies)))
+         #?=(let1 paint (lambda()
+                          (for-each
+                           (lambda(b)
+                             (gl-push-matrix*
+                              (gl-mult-matrix
+                               ;; todo: locking?!
+                               (ode-body->matrix (ref* b 0)))
+                              (glut-wire-sphere RADIUS 10 5)
+                              ;;(glut-solid-sphere RADIUS 10 10)
+                              ))
+                           bodies))
+              (anaglyph-paint paint)))
         (simple-viewer-window 'demo)
         (let ((angle 0)
               (last-stamp (timestamp))
@@ -144,8 +159,8 @@ exec gosh -I. -I../runtime-compile -- $0 "$@"
                              (-. (ref* p 1 2) (ref* p 0 2))))
             ;; )
             (space-collide space world contactgroup collide-callback)
-            (dWorldStep world TPF)
-            ;;(dWorldQuickStep world TPF)
+            ;;(dWorldStep world TPF)
+            (dWorldQuickStep world TPF)
             (glut-post-redisplay)
             ;; todo: crap
             (let* ((new-stamp (timestamp))

@@ -20,13 +20,19 @@
           dBodyCreate
           dBodyAddForce
           dCreateSphere
+          dCreateBox
           dMassSetBox
+          dMassSetBoxTotal
+          dMassSetSphereTotal
           dMassAdjust
           <dMass>
           dBodySetMass
           dBodySetPosition
+          dBodySetRotation
+          dBodySetLinearVel
           get-ode-body-pos
           get-ode-body-rotation
+          ode-body-idle?
           space-collide
           dWorldStep
           dWorldQuickStep
@@ -35,7 +41,25 @@
           dSpaceDestroy
           dWorldDestroy
           dCloseODE
-          ode-object-collide))
+          dContactSlip1 dContactSlip2 dContactSoftERP dContactSoftCFM dContactApprox1
+          dWorldSetCFM
+          dWorldSetERP
+          dWorldSetQuickStepNumIterations
+          dWorldSetAutoDisableFlag
+          dWorldSetAutoDisableTime
+          dWorldSetAutoDisableLinearThreshold
+          dWorldSetAutoDisableAngularThreshold
+          dWorldSetAutoDisableAverageSamplesCount
+          dBodySetAutoDisableDefaults
+          dBodyGetAutoDisableFlag
+          dBodyGetAutoDisableSteps
+          dBodyIsEnabled
+          dBodyGetLinearVel
+          dBodyGetAngularVel
+          dBodyDisable
+          dBodyEnable
+          ode-object-collide
+          ode-object-collide-2))
 
 (select-module ode)
 
@@ -113,19 +137,40 @@
       ;; (return)
       )
 
+    (define-cfn norm (x::(const dReal*))
+      ::double
+      (return (+ (* (aref x 0) (aref x 0))
+                 (* (aref x 1) (aref x 1))
+                 (* (aref x 2) (aref x 2)))))
+
+    (define-cproc ode-body-idle-p (body threshold::<double>)
+      (let* ((b::dBodyID (unboxed body)))
+        ;; (printf "%f %d\n"
+        ;;         (norm (dBodyGetLinearVel b))
+        ;;         (< (norm (dBodyGetLinearVel b)) threshold))
+        ;; (printf "%f %d\n"
+        ;;         (norm (dBodyGetAngularVel b))
+        ;;         (< (norm (dBodyGetLinearVel b)) threshold))
+        (result (?: (and (< (norm (dBodyGetLinearVel b)) threshold)
+                         (< (norm (dBodyGetAngularVel b)) threshold))
+                    SCM_TRUE
+                    SCM_FALSE))))
+    
     (define-cproc space-collide-2 (_space _world _contactgroup callback)
       ::<void>
       ;; (unbox (& space) _space)
       ;; (unbox (& world) _world)
       ;; (unbox (& contactgroup) _contactgroup)
       (dSpaceCollide (unboxed _space) callback nearCallback))))
- '(space-collide-2))
+ '(ode-body-idle-p space-collide-2))
 
 (define (space-collide space world contactgroup callback)
   (space-collide-2 space world contactgroup
                    (lambda(o1 o2)
                      (callback (cast <dGeomID> o1)
                                (cast <dGeomID> o2)))))
+
+(define ode-body-idle? ode-body-idle-p)
 
 (define (get-ode-body-pos body)
   (let1 p (make <dVector3>)
@@ -148,3 +193,19 @@
       (if (not (zero? (dCollide o1 o2 1 (ptr (ref contact 'geom)) (c-sizeof <dContactGeom>))))
         contact
         #f))))
+
+(define-constant MAX_CONTACTS 4)
+
+(define ode-object-collide-2
+  (let ((contacts (make (c-array <dContact> MAX_CONTACTS)))
+        (csize (c-sizeof <dContact>)))
+    (for-each (lambda(contact)
+                (set! (ref* contact 'surface 'mode) 0)
+                (set! (ref* contact 'surface 'mu) 0.1)
+                (set! (ref* contact 'surface 'mu2) 0))
+              contacts)
+    (lambda(o1 o2)
+      (let1 n (dCollide o1 o2 MAX_CONTACTS (ptr (ref* contacts 0 'geom)) csize)
+        (map (lambda(i)
+               (ptr (ref contacts i)))
+             (iota n))))))
