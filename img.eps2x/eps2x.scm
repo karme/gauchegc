@@ -17,7 +17,7 @@
           ((eof-object? str) #f)
           ((rxmatch #/^%%EndComments/ str) #f)
           ((rxmatch #/^%%BoundingBox:/ str)
-           (map string->number (string-tokenize str #[\d])))
+           (map string->number (string-tokenize str #[\d+-])))
           (else
            (loop (- n 1) (read-line port))))))
 ;;;
@@ -33,16 +33,19 @@
 	(receive (x1 y1 x2 y2) (apply values bbox)
 	  (define (pt->dot pt)
 	    (inexact->exact (ceiling (* (/ pt 72) res))))
-          (let ((gs (open-output-process-port 
-                     (format #f
+          ;;(write bbox)
+          ;;(newline)
+          (receive (gs pid) (open-output-process-port 
+                             (format #f
     "gs -q -sDEVICE=~a  -g~ax~a -r~a -dNOPAUSE -sOutputFile=~a - ~a"
                              dev
 			     (pt->dot (- x2 x1))
 			     (pt->dot (- y2 y1))
 			     res 
-                             to from))))
-	    (format gs "-~a -~a translate~%" x1 y1)
-            0))
+                             to from))
+	    (format gs "~a ~a translate~%" (- x1)(- y1))
+            (close-output-port gs)
+            (process-wait pid)))
 	(errorf "Could not find BoundingBox~%"))))
 
 (provide "ggc/img/eps2x")

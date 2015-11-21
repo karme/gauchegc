@@ -2,16 +2,41 @@
 ;;;
 ;;;
 (define-module ggc.util
-  (export pianissimo myread
+  (export pie inexact-split pianissimo  myread
           with-temporary-file
+          retry-on-error
+          for-all
           )
 )
 (select-module ggc.util)
 
 ;;;
+;;; FOR-ALL proc list1 list2 ...
+;;;
+(define (for-all proc . params)
+  (if (null? params)
+      (proc)
+      (for-each (lambda (e)
+		  (apply for-all (cut proc e <...>) (cdr params)))
+		(car params))))
+
+;;;
+;;; RETRY-ON-ERROR
+;;;
+(define (retry-on-error interval count thunk)
+  (define (retry e)
+    (cond ((<= count 0)  #f)
+          (else
+           ;;(format (current-error-port)
+           ;;        "retrying ~a~%" count)
+           (sys-sleep interval)
+           (retry-on-error interval (- count 1) thunk))))
+  (with-error-handler retry thunk))
+
+;;;
 ;;; WITH-TEMPORARY-FILE
 ;;;
-;;; To change tempfile templete do something like,
+;;; To change tempfile templete, do something like,
 ;;; (with-module ggc.util (set! wtf-tmpl "/tmp/xxx"))
 ;;;
 (define wtf-tmpl "gomi")
@@ -43,7 +68,7 @@
       (define (wri x) (display sp) (write x) (newline))
       (define (dsp x) (display sp) (display x) (newline))
       (for-each (lambda (x)
-                  (if (pair? x)
+                  (if (list? x)
                       (begin 
                         (dsp "(")
                         (ff x (+ n pp-indent-level))
@@ -55,6 +80,27 @@
   (ff v pp-indent-level)
   (display ")")(newline)
   )
+
+;;;
+;;; pie: print inexact number with n digits below decimal point.
+;;;
+(define (inexact-split d n)
+  (define (p d n negative?)
+    (let* ((a (floor->exact d))
+	   (b (round->exact (* (- d a) (expt 10 n)))))
+      (cond ((= b (expt 10 n)) (values (+ a 1) 0 negative?))
+            ((> b (expt 10 n)) (error "something is wrong"))
+            (else              (values a b negative?)))))
+  (if (< d 0)
+      (p (- d) n #t)
+      (p d     n #f)))
+
+(define (pie d n)
+  (receive (a b negative?) (inexact-split d n)
+    (if negative? (display "-"))
+    (display a)
+    (display ".")
+    (format #t #"~~~|n|,'0d~~%" b)))
 
 ;;;
 ;;; MYREAD :
@@ -80,7 +126,7 @@
             (loop (peek-char))))))
 
   (define (read-string)
-    ;; ¥Ð¥Ã¥¯¥¹¥é¥Ã¥·¥å(\)¤Î½èÍý¤Ï¾ÊÎ¬.
+    ;; ãƒãƒƒã‚¯ã‚¹ãƒ©ãƒƒã‚·ãƒ¥(\)ã®å‡¦ç†ã¯çœç•¥.
     (let loop ((c (peek-char))
                (s '()))
       (if (eof-object? c)
@@ -103,7 +149,7 @@
               (read-as-string (peek-char) (cons c s))))))
 
   (define (read-pair)
-    ;; read-pair ¤È¤¤¤¦¤â¤Î¤Î . ¤Ë¤ÏÂÐ±þ¤·¤Ê¤¤.
+    ;; read-pair ã¨ã„ã†ã‚‚ã®ã® . ã«ã¯å¯¾å¿œã—ãªã„.
     (let loop ((o (myread))
                (l '()))
       (if (and (char? o) (char=? #\) o))
@@ -115,7 +161,7 @@
     (cond 
      ((eof-object? c) c)
      ((char=? #\( c)  (read-pair))
-     ((char=? #\) c) c) ; ÊÄ¤¸¥«¥Ã¥³¤¬Í¾·×¤Ë¤¢¤Ã¤Æ¤â¥¨¥é¡¼¤Ë¤·¤Ê¤¤.
+     ((char=? #\) c) c) ; é–‰ã˜ã‚«ãƒƒã‚³ãŒä½™è¨ˆã«ã‚ã£ã¦ã‚‚ã‚¨ãƒ©ãƒ¼ã«ã—ãªã„.
      ((char=? #\" c)  (read-string))
      ((char-set-contains? tcs c)
       (read-as-string (peek-char) (list c)))
