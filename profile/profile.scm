@@ -61,7 +61,8 @@
 (define *call-stack* (make-parameter '()))
 
 (define (time->string t)
-  (date->string (time-utc->date t) "~1 ~T.~N~z"))
+  #`",(time-second t).,(time-nanosecond t)")
+;;  (date->string (time-utc->date t) "~1 ~T.~N~z"))
 
 (define (write/ss-to-string x)
   (with-output-to-string (lambda() (write/ss x))))
@@ -77,26 +78,23 @@
 (define-syntax debug-print
   (syntax-rules ()
     ((_ ?form)
-     (let ((si (debug-source-info '?form))
-           (start-time (current-time)))
-       (let ((ci `((source ,(debug-source-info '?form))
-                   (pid ,(sys-getpid))
-                   (form ,'?form)
-                   (stack ,(with-module profile (*call-stack*)))
-                   (gc-no ,(gc-get-gc-no)))))
-         (format/ss (current-error-port)
-                    "~s\n"
-                    (cons `(time ,(time->string start-time))
-                          ci))
-         (parameterize ([(with-module profile *call-stack*) (cons (list (car (assoc-ref ci 'source)) '?form)
-                                                                  (with-module profile (*call-stack*)))])
+     (let ((ci `((source ,(debug-source-info '?form))
+                 (pid ,(sys-getpid))
+                 (form ,'?form)
+                 (stack ,(with-module profile (*call-stack*)))
+                 (gc-no ,(gc-get-gc-no)))))
+       (format/ss (current-error-port)
+                  "~s\n"
+                  ci)
+       (parameterize ([(with-module profile *call-stack*) (cons (list (car (assoc-ref ci 'source)) '?form)
+                                                                (with-module profile (*call-stack*)))])
+         (let1 start-time (current-time)
            (guard (e [else
                       (let ((end-time (current-time))
                             (end-gc-no (gc-get-gc-no)))
                         (format/ss (current-error-port)
                                    "~s\n"
-                                   (append (cons `(time ,(time->string end-time))
-                                                 ci)
+                                   (append ci
                                            `((runtime ,(time->seconds (time-difference end-time start-time)))
                                              (gc-runs ,(- end-gc-no (car (assoc-ref ci 'gc-no))))
                                              (error ,(ref e 'message)) ;; todo: only available if error object
@@ -107,16 +105,20 @@
                           (end-gc-no (gc-get-gc-no)))
                       (format/ss (current-error-port)
                                  "~s\n"
-                                 (append (cons `(time ,(time->string end-time))
-                                               ci)
+                                 (append ci
                                          `((runtime ,(time->seconds (time-difference end-time start-time)))
                                            (gc-runs ,(- end-gc-no (car (assoc-ref ci 'gc-no)))))
-                                         (if (serializable? vals)
-                                           `((results ,vals))
-                                           '())))
+                                         ))
                       (apply values vals))))))))))
 
 ;; global change to debug print? uh!
 (define (profile-global-hack)
   (let1 x debug-print 
     (with-module gauche.vm.debugger (set! debug-print x))))
+
+(cond-expand
+ (global-profile
+  (profile-global-hack)
+  (set! (port-buffering (current-error-port)) :full))
+ (else
+  ))
