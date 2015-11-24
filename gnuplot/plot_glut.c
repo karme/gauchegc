@@ -1,6 +1,4 @@
 /* 
-   $Id: plot_glut.c,v 1.31 2002/10/15 03:05:54 skimu Exp $
-
    This program emulates gnuplot_x11 by the use of GLUT,
    allows you to run gnuplot interacively in the Non-X11
    or Non-Tektronics graphc terminal environment but

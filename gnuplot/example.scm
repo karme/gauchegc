@@ -1,9 +1,10 @@
-;;; $Id: example.scm,v 1.5 2002/10/15 04:47:44 skimu Exp $
+;;; $Id: example.scm,v 1.1.1.1 2006/04/10 01:52:27 skimu Exp $
 
 ;
 ;  parallel execution of SICP picuture language
 ;
 
+(use gauche.process)
 (use ggc.skimu.gnuplot)
 (use ggc.lwp)
 
@@ -20,7 +21,7 @@
 
 (define (pict-open-gp file)
   (if *interactive*
-      (gplt-open-graphics)
+      (gplt-open-graphics (open-output-process-port "telnet localhost 5055 > /dev/null 2>&1"))
       (gplt-open-graphics file)))
 
 (define (pict-close-gp)
@@ -42,10 +43,8 @@
         (display mess)
         (newline))))
 
-(pict-mess "
-Welcome to parallel picture drawing demo.
-We will show you two demos.   Enjoy!!
-")
+(pict-mess "Welcome to parallel picture drawing demo. We will show you two demos.
+Please open Gplt.app (mac) or run ./plot_glut in background.")
 (pict-pause)
 
 ;;;
@@ -58,10 +57,10 @@ We will show you two demos.   Enjoy!!
 	 (y2 (ycor-vect p2)))
     (lwp-pause)
     (gplt-draw-line w
-		    (inexact->exact x1)
-		    (inexact->exact y1)
-		    (inexact->exact x2)
-		    (inexact->exact y2))))
+		    (round->exact x1)
+		    (round->exact y1)
+		    (round->exact x2)
+		    (round->exact y2))))
 
 (define (apply-painter win painter width height)
   (let ((frame  (make-frame win (make-vect 0.0 0.0)
@@ -79,8 +78,7 @@ We will show you two demos.   Enjoy!!
 ;;;
 ;;;  DEMO1: draw three windows in parallel
 ;;;
-(pict-mess "
-The first demo is to draw three windows in parallel.")
+(pict-mess "The first demo is to draw three windows in parallel.")
 (pict-pause)
 
 (pict-open-gp "three-windows-demo.gp")
@@ -105,10 +103,8 @@ The first demo is to draw three windows in parallel.")
 ;;; DEMO2: parallel painter
 ;;;
 
-(pict-mess "
-The second demo is a parallel verion of painter, 
-but we will show you normal version first.
-Be care full about the order of drawings.")
+(pict-mess "The second demo is a parallel verion of painter,
+but we will show you normal version first.")
 (pict-pause)
 
 (pict-open-gp "clw2-series2.gp")
@@ -166,8 +162,7 @@ Be care full about the order of drawings.")
 ;;; show parallel version paiter into window 2
 ;;;
 
-(pict-mess "
-Are you ready for parallel verion?")
+(pict-mess "Are you ready for parallel verion?")
 (pict-pause)
 
 (pict-open-gp "clw2-parallel2.gp")
@@ -181,7 +176,5 @@ Are you ready for parallel verion?")
 (pict-sleep 1)
 (pict-close-gp)
 
-(pict-mess "
-That's it.  Thank you very much.
-")
+(pict-mess "That's it.  Thank you very much.")
 ;;; EOF
