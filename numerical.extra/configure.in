@@ -2,7 +2,7 @@ dnl
 dnl Configuring numerical.extra
 dnl  process this file with "autoconf -I `gauche-config --ac`" to
 dnl  generate 'configure'.
-dnl $Id: configure.in,v 1.2 2005/11/05 17:02:57 skimu Exp $
+dnl $Id: configure.in,v 1.1.1.1 2006/04/10 01:52:27 skimu Exp $
 dnl
 
 AC_PREREQ(2.54)
@@ -12,38 +12,29 @@ dnl configure, uncomment the following line.  In such a case, you need
 dnl to copy config.guess and config.sub from automake distribution.
 AC_CANONICAL_SYSTEM
 
-dnl Sets several Gauche-specific parameters.
-AC_GAUCHE_INIT_EXT
-dnl Sets the default value of INSTALL_TYPE macro.
-dnl You can set it either 'site' or 'sys'.  Usually, user-provided
-dnl extensions are installed as 'site' category.
-AC_GAUCHE_INSTALL_TYPE(site)
+AC_PATH_PROG([GOSH], gosh)
+AC_PATH_PROG([GAUCHE_CONFIG], gauche-config)
+AC_PATH_PROG([GAUCHE_PACKAGE], gauche-package)
+AC_PATH_PROG([GAUCHE_INSTALL], gauche-install)
+AC_PATH_PROG([GAUCHE_CESCONV], gauche-cesconv)
 
-dnl Check for headers.
-dnl Add your macro calls to check required headers, if you have any.
+dnl Usually these parameters are set by AC_PROG_CC, but we'd rather use
+dnl the same one as Gauche has been compiled with.
+SOEXT=`"$GAUCHE_CONFIG" --so-suffix`
+OBJEXT=`"$GAUCHE_CONFIG" --object-suffix`
+EXEEXT=`"$GAUCHE_CONFIG" --executable-suffix`
+AC_SUBST(SOEXT)
+AC_SUBST(OBJEXT)
+AC_SUBST(EXEEXT)
 
-dnl Get compiler parameters which Gauche has been compiled with.
-dnl Do not use AC_PROG_CC.  You need to compile and link with the
-dnl same programs as gosh.
-AC_GAUCHE_CC
-AC_GAUCHE_FLAGS
-
-dnl Check for other programs.
-dnl Add your macro calls to check existence of programs, if you have any.
-
-dnl Check for libraries
-dnl Add your macro calls to check required libraries, if you have any.
-
-dnl Set LDFLAGS to generate dlopen-able extension.
-dnl This should come after all tests, or the tests that does link will fail.
-dnl skimu: we do not need to specify -lgauche, do we?
-
-AC_GAUCHE_FIX_LIBS
-
-#SITEARCHDIR=`gauche-config --sitearchdir`
-#SYSARCHDIR=`gauche-config --sysarchdir`
+dnl Creating gpd (gauche package description) file
+GAUCHE_PACKAGE_CONFIGURE_ARGS="`echo ""$ac_configure_args"" | sed 's/[\\""\`\$]/\\\&/g'`"
+AC_MSG_NOTICE([creating ${PACKAGE_NAME}.gpd])
+"$GAUCHE_PACKAGE" make-gpd "$PACKAGE_NAME" \
+  -version "$PACKAGE_VERSION" \
+  -configure "./configure $GAUCHE_PACKAGE_CONFIGURE_ARGS"
 
 dnl Output
-AC_GAUCHE_MAKE_GPD
+echo $PACKAGE_VERSION > VERSION
 AC_OUTPUT(Makefile)
 
