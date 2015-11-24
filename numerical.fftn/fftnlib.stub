@@ -3,6 +3,8 @@
 ;;;
 "
 #include \"gauche/uvector.h\"
+extern int  fftn();
+extern void fft_free();
 "
 ;;;
 ;;;
@@ -51,5 +53,4 @@ ScmObj Scm_Init_ggcnumfftn(void)
 }
 
 "
-
 ;; EOF
