@@ -6,6 +6,17 @@
   )
 (select-module ggc.numerical.fft-utils)
 
+(define (phase->time phase wfn nfft fs)
+  ;; cos(wt + P) = cos(w(t - t0)), 
+  ;;    --> t0 = -P/w
+  (cond ((> phase pi)
+	 (phase->time (- phase (* 2 pi)) wfn nfft fs))
+	((< phase (- pi))
+	 (phase->time (+ phase (* 2 pi)) wfn nfft fs))
+	(else
+	 (let ((w (/ (* 2 pi wfn fs) nfft)))
+	   (- (/ phase w))))))
+
 (define (fft->OAP fc wfn nfft)
   (let ((f00 (list-ref fc 0))
 	(f01 (list-ref fc (modulo wfn nfft))))
@@ -15,13 +26,18 @@
 	  (P (angle f01)))       ;; Phase
       (values O A P))))
 
-(define (fft-P->npf P wfn nfft)
+(define (fft-P->npf-old P wfn nfft)
   ;; Normalized phase funtion
   (lambda (n)
     (let lp ((P (- (/ (* 2 pi wfn n) nfft) P)))
       (cond ((< P 0)        (lp (+ P (* 2 pi))))
 	    ((< (* 2 pi) P) (lp (- P (* 2 pi))))
 	    (else P)))))
+
+(define (fft-P->npf P wfn nfft)
+  (lambda (n)
+    (let ((P (- (/ (* 2 pi wfn n) nfft) P)))
+      (mod P (* 2 pi)))))
 
 (define (fft-OAP->wf O A P wfn nfft)
   ;; Wave function
@@ -78,7 +94,7 @@
 
 (define (fft-dump-with-harmonics-index fc wfn nfft)
   (let ((idx (fft-unwrap (iota nfft) wfn nfft)))
-    (format #t "## ZZ* Real Imag Harmonics (WFN=~a, NFFT=~a)~" wfn nfft)
+    (format #t "## ZZ* Real Imag Harmonics (WFN=~a, NFFT=~a)~%" wfn nfft)
     (for-each (lambda (n z)
                 (let* ((r (real-part z))
                        (i (imag-part z))
@@ -93,7 +109,7 @@
 (define (fft-write-to-file-with-harmonics-index fc wfn nfft file)
   (with-output-to-file file 
     (lambda () 
-      (fft-dump-with-harmonics-index fc wfn nfft file))))
+      (fft-dump-with-harmonics-index fc wfn nfft))))
 (define fft-write-to-file/hi fft-write-to-file-with-harmonics-index)
 
 (define (fft->SNDR fc wfn nfft)
