@@ -1,6 +1,3 @@
-/*  $Id: grand.c,v 1.1 2002/09/02 16:05:35 skimu Exp $ */
-
-
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>

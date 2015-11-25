@@ -1,9 +1,10 @@
-;;
-;; sample test file
-;;
-
-(require "extra")
-(import ggc.numerical.extra)
+;;;
+;;; At source directory
+;;;
+;;; $ gosh -fload-verbose -I. -lextra test.scm
+;;;
+;;;
+(use ggc.numerical.extra)
 
 (format #t "%erf(0.0) = ~a~%" (%erf 0.0))
 (format #t "%erfc(0) = ~a~%" (%erfc 0.0))
@@ -14,7 +15,6 @@
 (format #t "erf(1) = ~a~%" (erf 1))
 (format #t "erf(2) = ~a~%" (erf 2))
 (format #t "erf(3) = ~a~%" (erf 3))
-(format #t "erf(1/3) = ~a~%" (erf 1/3))
 (format #t "erf(1/2) = ~a~%" (erf 1/2))
 (format #t "erf(1/3) = ~a~%" (erf 1/3))
 
@@ -31,7 +31,6 @@
  error-catcher
  (lambda ()
    (format #t "%erf(1) = ~a~%" (%erf 1))))
-
 
 (define (variance-of-grand N)
   (define (square x) (* x x))
@@ -52,7 +51,6 @@
 (variance-of-grand 5000)
 (variance-of-grand 50000)
 
-
 (define (write-bar n)
   (do ((i 0 (+ i 1)))
       ((= i n)  (display "*") (newline))
@@ -64,10 +62,10 @@
     (do ((i 0 (+ i 1)))
 	((= i 40000) #t)
       (letrec ((gau (%grand))
-	       (j (inexact->exact (+ offset  (* 3 gau)))))
+	       (j (floor->exact (+ offset  (* 3 gau)))))
 	(and (>= j 0) (< j N)
 	     (vector-set! v j (+ 0.01 (vector-ref v j))))))
     (do ((i 0 (+ i 1)))
 	((= i N) #t)
-      (write-bar (inexact->exact (vector-ref v i))))))
+      (write-bar (floor->exact (vector-ref v i))))))
 
