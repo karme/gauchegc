@@ -1,93 +1,73 @@
-#
-# $Id: Makefile.in,v 1.3 2005/11/05 17:02:57 skimu Exp $
-#
-
+# General info
 SHELL       = @SHELL@
 prefix      = @prefix@
 exec_prefix = @exec_prefix@
 bindir      = @bindir@
 libdir      = @libdir@
+datadir     = @datadir@
+datarootdir = @datarootdir@
+srcdir      = @srcdir@
 VPATH       = $(srcdir)
 
 # These may be overridden by make invocators
-DESTDIR  =
-OPTFLAGS = @OPTFLAGS@
-CC       = @CC@
-LIBS     = @LIBS@
-CFLAGS   = @CFLAGS@ 
-LDFLAGS  = @LDFLAGS@
-INSTALL_TYPE = @INSTALL_TYPE@
+DESTDIR        =
+GOSH           = "@GOSH@"
+GAUCHE_CONFIG  = "@GAUCHE_CONFIG@"
+GAUCHE_PACKAGE = "@GAUCHE_PACKAGE@"
+INSTALL        = "@GAUCHE_INSTALL@" -C
 
-# Set by configure
-GOSH     = @GOSH@
-GAUCHE_CONFIG = @GAUCHE_CONFIG@
-OBJEXT   = @OBJEXT@
-DSOEXT   = @SOEXT@
+# Other parameters
+SOEXT  = @SOEXT@
+OBJEXT = @OBJEXT@
+EXEEXT = @EXEEXT@
+LOCAL_PATHS = "@LOCAL_PATHS@"
 
-INSTALL  = @GAUCHE_INSTALL@
+# Module-specific stuff
+PACKAGE   = ggc.numerical.extra
 
-###
-###
-###
-MODULE    = ggc.numerical.extra
-DSOBASE   = ggcnumextra
-SCMFILES  = extra.scm
-STUBBASE  = ggc-numerical-extra
-HEADERS   = 
-OBJS      = $(DSOBASE)_head.$(OBJEXT) \
-            ggcnumextra.$(OBJEXT)     \
-            grand.$(OBJEXT)           \
-	    $(STUBBASE).$(OBJEXT)     \
-            $(DSOBASE)_tail.$(OBJEXT)
-###
-###
-###
+ARCHFILES = ggcnumextra.$(SOEXT)
+SCMFILES  = $(srcdir)/extra.scm
+HEADERS   =
 
 TARGET    = $(ARCHFILES)
-ARCHFILES = $(DSOBASE).$(DSOEXT)
-GENERATED = $(STUBBASE).c $(DSOBASE)_head.c $(DSOBASE)_tail.c
+GENERATED =
 CONFIG_GENERATED = Makefile config.cache config.log config.status \
-		   configure.lineno autom4te*.cache $(MODULE).gpd
+		   configure.lineno autom4te*.cache $(PACKAGE).gpd
 
-HEADER_INSTALL_DIR  = $(DESTDIR)`$(GAUCHE_CONFIG) --$(INSTALL_TYPE)incdir`
-SCM_INSTALL_DIR     = $(DESTDIR)`$(GAUCHE_CONFIG) --$(INSTALL_TYPE)libdir`/ggc/numerical
-GPD_INSTALL_DIR     = $(DESTDIR)`$(GAUCHE_CONFIG) --$(INSTALL_TYPE)libdir`/.packages
-ARCH_INSTALL_DIR    = $(DESTDIR)`$(GAUCHE_CONFIG) --$(INSTALL_TYPE)archdir`
+GAUCHE_PKGINCDIR  = "$(DESTDIR)@GAUCHE_PKGINCDIR@"
+GAUCHE_PKGLIBDIR  = "$(DESTDIR)@GAUCHE_PKGLIBDIR@"
+GAUCHE_PKGARCHDIR = "$(DESTDIR)@GAUCHE_PKGARCHDIR@"
+
+ggcnumextra_SRCS = $(srcdir)/ggcnumextra.c $(srcdir)/ggc-numerical-extra.stub grand.c
 
 all : $(TARGET)
 
-.SUFFIXES: .o .stub
-
-.c.o:
-	$(CC) $(CFLAGS) -c $< -o $@
-
-.stub.c:
-	$(GOSH) genstub $<
-
-$(STUBBASE).c : $(STUBBASE).stub
-
-$(DSOBASE).$(DSOEXT): $(OBJS)
-	$(CC) $(LDFLAGS) $(DSOBASE).$(DSOEXT) $(OBJS) $(LIBS)
-
-$(DSOBASE)_head.c $(DSOBASE)_tail.c :
-	$(GAUCHE_CONFIG) --fixup-extension $(DSOBASE)
+ggcnumextra.$(SOEXT): $(ggcnumextra_SRCS)
+	$(GAUCHE_PACKAGE) compile \
+	  --local=$(LOCAL_PATHS) --verbose ggcnumextra $(ggcnumextra_SRCS)
 
 check : all
 	@rm -f test.log
-	$(GOSH) -I. test.scm > test.log
+	$(GOSH) -fload-verbose -I. -I$(srcdir) -lextra.scm $(srcdir)/test.scm > test.log
 
 install : all
-	$(INSTALL) -m 444 -T $(HEADER_INSTALL_DIR) $(HEADERS)
-	$(INSTALL) -m 444 -T $(SCM_INSTALL_DIR) $(SCMFILES) 
-	$(INSTALL) -m 555 -T $(ARCH_INSTALL_DIR) $(ARCHFILES)
-	$(INSTALL) -m 444 -T $(GPD_INSTALL_DIR) $(MODULE).gpd
+	$(INSTALL) -m 555 -T $(GAUCHE_PKGARCHDIR) $(ARCHFILES)
+	$(INSTALL) -m 444 -T $(GAUCHE_PKGLIBDIR)/ggc/numerical $(SCMFILES)
+	$(INSTALL) -m 444 -T $(GAUCHE_PKGLIBDIR)/.packages $(PACKAGE).gpd
+
+uninstall :
+	$(INSTALL) -U $(GAUCHE_PKGINCDIR) $(HEADERS)
+	$(INSTALL) -U $(GAUCHE_PKGLIBDIR) $(SCMFILES)
+	$(INSTALL) -U $(GAUCHE_PKGARCHDIR) $(ARCHFILES)
+	$(INSTALL) -U $(GAUCHE_PKGLIBDIR)/.packages $(PACKAGE).gpd
 
 clean :
-	rm -rf core $(TARGET) $(OBJS) $(GENERATED) *~ test.log so_locations test*.dat
+	$(GAUCHE_PACKAGE) compile --clean ggcnumextra $(ggcnumextra_SRCS)
+	rm -rf core $(TARGET) $(GENERATED) *~ test.log so_locations
 
 distclean : clean
 	rm -rf $(CONFIG_GENERATED)
 
 maintainer-clean : clean
-	rm -rf $(CONFIG_GENERATED) configure
+	rm -rf $(CONFIG_GENERATED)  VERSION
 
