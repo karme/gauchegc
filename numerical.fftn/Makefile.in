@@ -48,9 +48,9 @@ ggcnumfftn.$(SOEXT): $(fftn_SRCS)
 
 check : all
 	@rm -f test.log
-	for i in 16 32 64 128 256 512 1024; do        \
-                echo  "$$i: \c";                        \
-                $(GOSH) -fload-verbose -I. -l fftn.scm test.scm $$i; \
+	for i in 16 32 64 128 256 512 1024; do         \
+                echo  "$$i: \c";                       \
+                $(GOSH) -I. -l fftn.scm test.scm $$i;  \
         done > test.log
 
 install : all
