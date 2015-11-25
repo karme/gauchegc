@@ -6,6 +6,17 @@
   )
 (select-module ggc.numerical.fft-utils)
 
+(define (phase->time phase wfn nfft fs)
+  ;; cos(wt + P) = cos(w(t - t0)), 
+  ;;    --> t0 = -P/w
+  (cond ((> phase pi)
+	 (phase->time (- phase (* 2 pi)) wfn nfft fs))
+	((< phase (- pi))
+	 (phase->time (+ phase (* 2 pi)) wfn nfft fs))
+	(else
+	 (let ((w (/ (* 2 pi wfn fs) nfft)))
+	   (- (/ phase w))))))
+
 (define (fft->OAP fc wfn nfft)
   (let ((f00 (list-ref fc 0))
 	(f01 (list-ref fc (modulo wfn nfft))))
@@ -15,13 +26,18 @@
 	  (P (angle f01)))       ;; Phase
       (values O A P))))
 
-(define (fft-P->npf P wfn nfft)
+(define (fft-P->npf-old P wfn nfft)
   ;; Normalized phase funtion
   (lambda (n)
     (let lp ((P (- (/ (* 2 pi wfn n) nfft) P)))
       (cond ((< P 0)        (lp (+ P (* 2 pi))))
 	    ((< (* 2 pi) P) (lp (- P (* 2 pi))))
 	    (else P)))))
+
+(define (fft-P->npf P wfn nfft)
+  (lambda (n)
+    (let ((P (- (/ (* 2 pi wfn n) nfft) P)))
+      (mod P (* 2 pi)))))
 
 (define (fft-OAP->wf O A P wfn nfft)
   ;; Wave function
@@ -78,7 +94,7 @@
 
 (define (fft-dump-with-harmonics-index fc wfn nfft)
   (let ((idx (fft-unwrap (iota nfft) wfn nfft)))
-    (format #t "## ZZ* Real Imag Harmonics (WFN=~a, NFFT=~a)~" wfn nfft)
+    (format #t "## ZZ* Real Imag Harmonics (WFN=~a, NFFT=~a)~%" wfn nfft)
     (for-each (lambda (n z)
                 (let* ((r (real-part z))
                        (i (imag-part z))
@@ -93,7 +109,7 @@
 (define (fft-write-to-file-with-harmonics-index fc wfn nfft file)
   (with-output-to-file file 
     (lambda () 
-      (fft-dump-with-harmonics-index fc wfn nfft file))))
+      (fft-dump-with-harmonics-index fc wfn nfft))))
 (define fft-write-to-file/hi fft-write-to-file-with-harmonics-index)
 
 (define (fft->SNDR fc wfn nfft)
@@ -146,5 +162,38 @@
 	     (enob  (sndr->enob sndr))
 	     (sfdr  (dB10 (/ (max f1 f2) fs))))
 	(values sndr enob sfdr fns)))))
+
+(define (fft-harmonics fc wfn nfft id)
+  (let* ((uc  (fft/unwrap fc wfn nfft))
+	 (f1  (list-ref uc 1))
+	 (f2  (list-ref uc 2))
+	 (f3  (list-ref uc 3))
+	 (f4  (list-ref uc 4))
+	 (f5  (list-ref uc 5)))
+    (let lp ((n 6) (fo 0) (no 0))
+      (cond ((>= n (/ nfft 2)) (values f1 f2 f3 f4 f5 fo no))
+	    ((> (magnitude (list-ref uc n))
+                (magnitude fo))
+	     (lp (+ n 1) (list-ref uc n) n))
+	    (else (lp (+ n 1) fo no))))))
+
+(define (fft-harmonics-2 fc wfn nfft id)
+  (define (mth? m n) (= n (modulo (* m wfn) nfft)))
+  (let lp ((fc (cdr fc))
+           (n  1)
+           (f1 0) (f2 0) (f3 0) (f4 0) (f5 0) (fo 0) (no 0))
+    (cond ((null? fc) (values f1 f2 f3 f4 f5 fo no))
+          ((mth? 1 n) (lp (cdr fc) (+ n 1) (car fc) f2 f3 f4 f5 fo no))
+          ((mth? 2 n) (lp (cdr fc) (+ n 1) f1 (car fc) f3 f4 f5 fo no))
+          ((mth? 3 n) (lp (cdr fc) (+ n 1) f1 f2 (car fc) f4 f5 fo no))
+          ((mth? 4 n) (lp (cdr fc) (+ n 1) f1 f2 f3 (car fc) f5 fo no))
+          ((mth? 5 n) (lp (cdr fc) (+ n 1) f1 f2 f3 f4 (car fc) fo no))
+          ((or (mth? -1 n) (mth? -2 n) (mth? -3 n) (mth? -4 n) (mth? -5 n))
+           (lp (cdr fc) (+ n 1) f1 f2 f3 f4 f5 fo no))
+          (else
+           (if (> (magnitude (car fc))
+                  (magnitude fo))
+               (lp (cdr fc) (+ n 1) f1 f2 f3 f4 f5 (car fc) n)
+               (lp (cdr fc) (+ n 1) f1 f2 f3 f4 f5 fo no))))))
 
 (provide "ggc/numerical/fft-utils")
