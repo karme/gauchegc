@@ -1,9 +1,10 @@
-;;
-;; sample test file
-;;
-
-(require "extra")
-(import ggc.numerical.extra)
+;;;
+;;; At source directory
+;;;
+;;; $ gosh -fload-verbose -I. -lextra test.scm
+;;;
+;;;
+(use ggc.numerical.extra)
 
 (format #t "%erf(0.0) = ~a~%" (%erf 0.0))
 (format #t "%erfc(0) = ~a~%" (%erfc 0.0))
@@ -30,7 +31,6 @@
  error-catcher
  (lambda ()
    (format #t "%erf(1) = ~a~%" (%erf 1))))
-
 
 (define (variance-of-grand N)
   (define (square x) (* x x))
