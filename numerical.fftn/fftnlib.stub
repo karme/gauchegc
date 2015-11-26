@@ -3,6 +3,7 @@
 ;;;
 "
 #include \"gauche/uvector.h\"
+#include \"fftn.h\"
 "
 ;;;
 ;;;
@@ -21,7 +22,7 @@
 
     n = Scm_Length(ldims);
     if (n > FFT_MAX_DIM)
-        SCM_RETURN(SCM_FALSE); /* should rise an error */
+        SCM_RETURN(SCM_FALSE); /* should raise an error */
     for (i=0; i < n; i++)
         dims[i] = SCM_INT_VALUE(Scm_ListRef(ldims, i, SCM_UNBOUND));
     dims[i] = 0;
@@ -41,7 +42,7 @@
 
 void Scm_Init_fftnlib(ScmModule *module);
 
-ScmObj Scm_Init_ggcnumfftn(void)
+void Scm_Init_ggcnumfftn(void)
 {
     ScmModule *mod;
 

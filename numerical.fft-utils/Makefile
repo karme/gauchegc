@@ -1,26 +1,13 @@
-SCM_INSTALL_DIR=`gauche-config --sitelibdir`/ggc/numerical
-
 SCMFILES=fft-utils.scm
-
 COMMANDS=
 
-INSTALL=../install-sh -c
+DESTDIR=`gauche-config --sitelibdir`/ggc/numerical
 
 install :
-	for f in $(COMMANDS) _end; do \
-	  if test $$f != _end; then   \
-	     chmod +x $$f;            \
-	  fi;                         \
-	done
-	mkdir -p $(SCM_INSTALL_DIR)
-	for f in $(SCMFILES) _end; do                 \
-	  if test $$f != _end; then                   \
-	    $(INSTALL) -m 444 $$f $(SCM_INSTALL_DIR); \
-	  fi;                                         \
-	done
+	gauche-install -T $(DESTDIR) -m 444 $(SCMFILES)
 
 test:
-
-
+	@rm -f test.log
+	gosh -I. -l fft-utils.scm test.scm  > test.log
 clean:
 	rm -f fo.* *.scm.*~ Makefile.*~ *.log *.png

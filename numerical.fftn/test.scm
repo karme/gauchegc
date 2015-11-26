@@ -2,7 +2,6 @@
 ;; 
 ;;
 (use srfi-1)
-(use gauche.uvector)
 (use ggc.numerical.fftn)
 
 (define (comp lis1 lis2)
