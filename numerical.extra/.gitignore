@@ -1,0 +1,7 @@
+Makefile
+VERSION
+config.log
+config.status
+ggc.numerical.extra.gpd
+*.so
+*.o
