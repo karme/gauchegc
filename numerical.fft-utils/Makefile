@@ -6,7 +6,7 @@ DESTDIR=`gauche-config --sitelibdir`/ggc/numerical
 install :
 	gauche-install -T $(DESTDIR) -m 444 $(SCMFILES)
 
-test:
+check:
 	@rm -f test.log
 	gosh -I. -l fft-utils.scm test.scm  > test.log
 clean:
