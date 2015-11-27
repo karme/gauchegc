@@ -1,4 +1,4 @@
-DESTDIR=`gauche-config --sitelibdir`/ggc/skimu
+SITELIBDIR=`gauche-config --sitelibdir`
 
 SCMFILES= gnuplot.scm
 
@@ -19,7 +19,7 @@ Gplt.app/Contents/MacOS/Gplt: plot_glut
 	cp plot_glut Gplt.app/Contents/MacOS/Gplt
 
 install :
-	gauche-install -T $(DESTDIR) -m 444 $(SCMFILES)
+	gauche-install -T $(SITELIBDIR)/ggc/skimu -m 444 $(SCMFILES)
 
 install-mac : install install-helper install-app
 install-all : install install-helper
@@ -31,7 +31,7 @@ install-helper: plot_glut comm_plot_glut
 	chmod +x comm_plot_glut
 	cp plot_glut comm_plot_glut /usr/local/bin
 
-test-mac:
+test-mac: app
 	open Gplt.app
 	gosh -I. -lgnuplot.scm -l../lwp/lwp.scm example.scm
 

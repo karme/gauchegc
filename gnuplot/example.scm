@@ -44,7 +44,7 @@
         (newline))))
 
 (pict-mess "Welcome to parallel picture drawing demo. We will show you two demos.
-Please open Gplt.app (mac) or run ./plot_glut in background.")
+Please open Gplt.app (mac) or run ./plot_glut (others) in background.")
 (pict-pause)
 
 ;;;
