@@ -3,3 +3,6 @@ VERSION
 config.log
 config.status
 ggc.numerical.extra.gpd
+test.log
+*.so
+*.o

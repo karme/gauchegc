@@ -1,11 +1,12 @@
-#
-# $Id: Makefile.in,v 1.2 2010/02/11 20:49:37 skimu Exp $
-#
+# General info
 SHELL       = @SHELL@
 prefix      = @prefix@
 exec_prefix = @exec_prefix@
 bindir      = @bindir@
 libdir      = @libdir@
+datadir     = @datadir@
+datarootdir = @datarootdir@
+srcdir      = @srcdir@
 VPATH       = $(srcdir)
 
 # These may be overridden by make invocators
@@ -13,61 +14,64 @@ DESTDIR        =
 GOSH           = "@GOSH@"
 GAUCHE_CONFIG  = "@GAUCHE_CONFIG@"
 GAUCHE_PACKAGE = "@GAUCHE_PACKAGE@"
-INSTALL        = "@GAUCHE_INSTALL@"
+INSTALL        = "@GAUCHE_INSTALL@" -C
 
-# Set by configure
-SOEXT    = @SOEXT@
-OBJEXT   = @OBJEXT@
-DSOEXT   = @SOEXT@
+# Other parameters
+SOEXT  = @SOEXT@
+OBJEXT = @OBJEXT@
+EXEEXT = @EXEEXT@
+LOCAL_PATHS = "@LOCAL_PATHS@"
 
-###
-###
-###
-PACKAGE   = ggcnumfftn
-MODULE    = ggc.numerical.fftn
-DSOBASE   = ggcnumfftn
-SCMFILES  = fftn.scm
-STUBBASE  = fftnlib
-HEADERS   = 
-SRCS      = fftn.c fftnlib.stub
+# Module-specific stuff
+PACKAGE   = ggc.numerical.fftn
 
-###
-###
-###
-ARCHFILES = $(DSOBASE).$(DSOEXT)
-GENERATED = $(STUBBASE).c $(DSOBASE)_head.c $(DSOBASE)_tail.c fftn.o 
-CONFIG_GENERATED = Makefile config.cache config.log config.status \
-		   configure.lineno autom4te*.cache $(MODULE).gpd
-
-HEADER_INSTALL_DIR  = $(DESTDIR)`$(GAUCHE_CONFIG) --siteincdir`
-SCM_INSTALL_DIR     = $(DESTDIR)`$(GAUCHE_CONFIG) --sitelibdir`/ggc/numerical
-GPD_INSTALL_DIR     = $(DESTDIR)`$(GAUCHE_CONFIG) --sitelibdir`/.packages
-ARCH_INSTALL_DIR    = $(DESTDIR)`$(GAUCHE_CONFIG) --sitearchdir`
+ARCHFILES = ggcnumfftn.$(SOEXT)
+SCMFILES  = $(srcdir)/fftn.scm
+HEADERS   =
 
 TARGET    = $(ARCHFILES)
+GENERATED =
+CONFIG_GENERATED = Makefile config.cache config.log config.status \
+		   configure.lineno autom4te*.cache $(PACKAGE).gpd
+
+GAUCHE_PKGINCDIR  = "$(DESTDIR)@GAUCHE_PKGINCDIR@"
+GAUCHE_PKGLIBDIR  = "$(DESTDIR)@GAUCHE_PKGLIBDIR@"
+GAUCHE_PKGARCHDIR = "$(DESTDIR)@GAUCHE_PKGARCHDIR@"
+
+fftn_SRCS = $(srcdir)/fftn.c $(srcdir)/fftnlib.stub
+
 all : $(TARGET)
 
-$(DSOBASE).$(DSOEXT): $(OBJS)
-	$(GAUCHE_PACKAGE) compile --verbose ${DSOBASE} $(SRCS)
+ggcnumfftn.$(SOEXT): $(fftn_SRCS)
+	$(GAUCHE_PACKAGE) compile \
+	  --local=$(LOCAL_PATHS) --verbose ggcnumfftn $(fftn_SRCS)
 
 check : all
-	for i in 16 32 64 128 256 512 1024; do  \
-                echo $$i " \c";       \
-                gosh -fload-verbose -I. -l fftn.scm test.scm $$i; \
+	@rm -f test.log
+	for i in 16 32 64 128 256 512 1024; do         \
+                echo  "$$i: \c";                       \
+                $(GOSH) -I. -l fftn.scm test.scm $$i;  \
         done > test.log
 
 install : all
-	$(INSTALL) -m 444 -T $(HEADER_INSTALL_DIR) $(HEADERS)
-	$(INSTALL) -m 444 -T $(SCM_INSTALL_DIR) $(SCMFILES) 
-	$(INSTALL) -m 555 -T $(ARCH_INSTALL_DIR) $(ARCHFILES)
-	$(INSTALL) -m 444 -T $(GPD_INSTALL_DIR)  $(MODULE).gpd
+	$(INSTALL) -m 444 -T $(GAUCHE_PKGINCDIR) $(HEADERS)
+	$(INSTALL) -m 444 -T $(GAUCHE_PKGLIBDIR)/ggc/numerical $(SCMFILES)
+	$(INSTALL) -m 555 -T $(GAUCHE_PKGARCHDIR) $(ARCHFILES)
+	$(INSTALL) -m 444 -T $(GAUCHE_PKGLIBDIR)/.packages $(PACKAGE).gpd
+
+uninstall :
+	$(INSTALL) -U $(GAUCHE_PKGINCDIR) $(HEADERS)
+	$(INSTALL) -U $(GAUCHE_PKGLIBDIR) $(SCMFILES)
+	$(INSTALL) -U $(GAUCHE_PKGARCHDIR) $(ARCHFILES)
+	$(INSTALL) -U $(GAUCHE_PKGLIBDIR)/.packages $(PACKAGE).gpd
 
 clean :
-	$(GAUCHE_PACKAGE) compile --clean ${DSOBASE} $(SRCS)
+	$(GAUCHE_PACKAGE) compile --clean fftn $(fftn_SRCS)
 	rm -rf core $(TARGET) $(GENERATED) *~ test.log so_locations
 
 distclean : clean
 	rm -rf $(CONFIG_GENERATED)
 
 maintainer-clean : clean
-	rm -rf $(CONFIG_GENERATED) VERSION
+	rm -rf $(CONFIG_GENERATED)  VERSION
+

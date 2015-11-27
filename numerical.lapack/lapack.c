@@ -3,7 +3,7 @@
 
 extern void Scm_Init_lapacklib(ScmModule *);
 
-ScmObj Scm_Init_ggcnumlapack(void)
+void Scm_Init_ggcnumlapack(void)
 {
     ScmModule *mod;
 
@@ -17,4 +17,4 @@ ScmObj Scm_Init_ggcnumlapack(void)
    Should be fixed by linking options
 */
 
-int MAIN__() {}
+void MAIN__() {}

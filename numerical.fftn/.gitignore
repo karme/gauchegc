@@ -1,5 +1,8 @@
 Makefile
-VERSION
 config.log
 config.status
 ggc.numerical.fftn.gpd
+*.log
+*.so
+*.o
+*~
