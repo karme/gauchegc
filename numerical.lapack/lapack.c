@@ -1,7 +1,9 @@
 #include <gauche.h>
 #include <gauche/extend.h>
 
-ScmObj Scm_Init_ggcnumlapack(void)
+extern void Scm_Init_lapacklib(ScmModule *);
+
+void Scm_Init_ggcnumlapack(void)
 {
     ScmModule *mod;
 
@@ -15,4 +17,4 @@ ScmObj Scm_Init_ggcnumlapack(void)
    Should be fixed by linking options
 */
 
-MAIN__() {}
+void MAIN__() {}

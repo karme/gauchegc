@@ -3,6 +3,7 @@
 ;;;
 "
 #include \"gauche/uvector.h\"
+extern int dgels_();
 #define DGELS dgels_
 "
 ;;;
