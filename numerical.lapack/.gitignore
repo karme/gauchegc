@@ -1,0 +1,8 @@
+Makefile
+VERSION
+config.log
+config.status
+ggc.numerical.lapack.gpd
+test.log
+*.so
+*.o
