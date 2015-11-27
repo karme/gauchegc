@@ -21,7 +21,9 @@
 (cf-arg-with 'lapacklib
              (cf-help-string
               "--with-lapacklib=..."
-              "linker option for lapack and blas.")
+              "linker option for lapack and blas. For example,
+   --with-lapacklib=' -L/usr/opt/lib -llapack -lblas'   
+You need a space in front of `-L', otherwise you'll get an error.")
              (^[with-lapack]
                #;(print #"lapack:~|with-lapack|")
                (cf-subst 'LAPACKLIBS with-lapack))
