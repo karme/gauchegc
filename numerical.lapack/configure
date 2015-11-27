@@ -55,9 +55,27 @@
 
 (define (arch~ x) (string-scan (gauche-architecture) x))
 
+(define (os-version . str)
+  (if (null? str)
+      (os-version (gauche-architecture))
+      (cond ((rxmatch->string #/\d+(\.\d+)*$/ (car str))
+             => (lambda (str)
+                  (map x->number (string-split str #\.))))
+            (else #f))))
+
+;; (os-version "x86_64-apple-darwin15.0.0") => (15 0 0)
+;; (os-version "x86-unknown-netbsd") => #f
+;; (os-version "x86-unknown-netbsd1.6") => (1 6)
+;; (os-version "sparc-sun-solaris2")    => (2)
+
+(define (version-major ver) (list-ref ver 0))
+(define (version-minor ver) (list-ref ver 1))
+
 (if (not (cf-have-subst? 'LAPACKLIBS))
-    (cond ((arch~ "darwin15")  (cf-subst 'LAPACKLIBS "-framework Accelerate"))
-          ((arch~ "darwin")    (cf-subst 'LAPACKLIBS "-framework veclib"))
+    (cond ((arch~ "darwin")
+           (if (>= (version-major (os-version)) 15)
+               (cf-subst 'LAPACKLIBS "-framework Accelerate")
+               (cf-subst 'LAPACKLIBS "-framework veclib")))
           ((arch~ "netbsd1.6") (cf-subst 'LAPACKLIBS "-Wl,-rpath /usr/pkg/lib -L/usr/pkg/lib -llapack -lblas -lg2c"))
           ((arch~ "solaris2")  (cf-subst 'LAPACKLIBS "-L/usr/local/lib -llapack -lblas"))
           ((arch~ "linux")     (cf-subst 'LAPACKLIBS "-Wl,-rpath /apps/free/lapack/3.4.2/lib -L/apps/free/lapack/3.4.2/lib -llapack -lblas"))
