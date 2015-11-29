@@ -1,14 +1,13 @@
-SCM_INSTALL_DIR=`gauche-config --sitelibdir`/ggc/
+SITELIBDIR=`gauche-config --sitelibdir`
 
 SCMFILES= lwp.scm
 
-INSTALL=../install-sh -c
+install:
+	gauche-install -T $(SITELIBDIR)/ggc -m 444 $(SCMFILES)
 
 
-install :
-	mkdir -p $(SCM_INSTALL_DIR)
-	for f in $(SCMFILES) _end; do \
-	  if test $$f != _end; then \
-	    $(INSTALL) -m 444 $$f $(SCM_INSTALL_DIR); \
-	  fi; \
-	done
+check:
+	gosh -l./lwp.scm example.scm
+
+clean:
+	rm -f *~

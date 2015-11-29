@@ -1,60 +1,33 @@
-;; parallel processing.
-;;
+;;;
+;;; From Kent Dybvig, THE SCHEME PROGRAMMING LANGUAGE SECOND EDITION,
+;;; (http://www.scheme.com/tspl2d/)
+;;;
 (define-module ggc.lwp
-    (export lwp lwp-init lwp-start lwp-pause lwp-exit))
-
+  (use data.queue)
+  (export lwp lwp-start lwp-pause lwp-next)
+  )
 (select-module ggc.lwp)
 
-(define lwp-list '())
-(define lwp-tail '())
-(define lwp-max 0)
-
-(define (lwp-init)
-  (set! lwp-list '())
-  (set! lwp-tail '())
-  (set! lwp-max 0))
-
-(define (addq e)
-  (if (null? lwp-tail)
-      (begin
-	(set! lwp-tail (cons e '()))
-	(set! lwp-list lwp-tail))
-      (begin
-	(set-cdr! lwp-tail (cons e '()))
-	(set! lwp-tail (cdr lwp-tail))))
-  (set! lwp-max (max lwp-max (length lwp-list))))
-
-(define (headq)
-  (let ((e (car lwp-list)))
-    (set! lwp-list (cdr lwp-list))
-    (if (null? lwp-list)
-	(set! lwp-tail '()))
-    e))
+(define lwp-queue (make-queue))
 
 (define (lwp thunk)
-  (addq thunk))
+  (enqueue! lwp-queue (lambda () (thunk) (lwp-next))))
 
-(define (start)
-  (wait)
-  (format (current-error-port) "Maximun processes=~a~%" lwp-max))
+(define (lwp-start)
+  (lwp-pause)
+  (if (queue-empty? lwp-queue)
+      #t
+      (lwp-start)))
 
-(define (wait)
-  (pause)
-  (if (not (null? lwp-list))
-      (wait)))
-
-(define (restart)
-  (let ((next (headq)))
+(define (lwp-next)
+  (let ((next (dequeue! lwp-queue)))
     (next)))
 
-(define (pause)
+(define (lwp-pause)
   (call/cc (lambda (k)
-	     (lwp (lambda () (k #f)))
-	     (restart))))
+             (lwp (lambda () (k #f)))
+             (lwp-next))))
 
-(define lwp-start start)
-(define lwp-pause pause)
-(define lwp-exit  restart)
 (provide "ggc/lwp")
-;;;
-; EOF
+;; EOF
+
