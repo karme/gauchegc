@@ -1,10 +1,5 @@
 #!/usr/bin/env gosh
 ;; -*-Scheme-*-
-;;; for in-place test
-;(add-load-path ".")
-;(load "frame-buffer.scm")
-;;;
-
 (use ggc.skimu.frame-buffer)
 
 (define (draw-gauss fb)
@@ -18,8 +13,8 @@
 	  ((= j H))
 	(letrec ((x (/ (- i W/2) W))
 		 (y (/ (- j H/2) H))
-;		 (val (inexact->exact (* 255 (exp (- 0 (* x x) (* y y))))))
-		 (val (inexact->exact (abs (* 255 (cos (* 30 (- 0 (* x x) (* y y))))))))
+              ;# (val (round->exact (* 255 (exp (- 0 (* x x) (* y y))))))
+		 (val (round->exact (abs (* 255 (cos (* 30 (- 0 (* x x) (* y y))))))))
 		 )
 	  (fb 'set! i j val val val))))))
 

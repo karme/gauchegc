@@ -1,13 +1,16 @@
-(add-load-path ".")
-(load "frame-buffer.scm")
 (use ggc.skimu.frame-buffer)
+
+(define (copy in out)
+  (print #"coping ~|in| to ~|out|")
+  (let ((pic (load-frame-buffer-from-jpg-file in)))
+    (save-frame-buffer-as-jpg-file pic out)
+    0))
 
 (define (main args)
   (if (= (length args) 3)
-      (let ((pic (load-frame-buffer-from-jpg-file (list-ref args 1))))
-        (save-frame-buffer-as-jpg-file pic (list-ref args 2))
-        0)
-	 (errorf "Usage: ~a in.jpg out.jpg~%"
-		 (list-ref args 0))))
+      (let* ((in  (list-ref args 1))
+             (out (list-ref args 2)))
+        (copy in out))
+      (errorf "Usage: ~a in.jpg out.jpg~%" (list-ref args 0))))
 
       

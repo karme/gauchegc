@@ -20,8 +20,8 @@
       (let ((x (point-x point))
 	    (y (point-y point)))
 	(make-point
-	 (inexact->exact (+ plot-x-margin (* dw (- x xmin))))
-	 (inexact->exact (- plot-height plot-y-margin (* dh (- y ymin)))))))))
+	 (round->exact (+ plot-x-margin (* dw (- x xmin))))
+	 (round->exact (- plot-height plot-y-margin (* dh (- y ymin)))))))))
 
 (define (find-draw-area pts)
   (let ((fx (point-x (car pts)))
