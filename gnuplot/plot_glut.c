@@ -1078,7 +1078,7 @@ int main(int argc, char **argv)
     /* MacOSX application */
     init_clients(-1);
   } else {
-    init_clients(0);
+    init_clients(-1);
   }
   init_listener();
 
