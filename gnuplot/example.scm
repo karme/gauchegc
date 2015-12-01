@@ -1,8 +1,6 @@
-;;; $Id: example.scm,v 1.1.1.1 2006/04/10 01:52:27 skimu Exp $
-
-;
-;  parallel execution of SICP picuture language
-;
+;;;
+;;;  parallel execution of SICP picuture language
+;;;
 
 (use gauche.process)
 (use ggc.skimu.gnuplot)
@@ -85,9 +83,9 @@ Please open Gplt.app (mac) or run ./plot_glut (others) in background.")
 (gplt-open-window 1)
 (gplt-open-window 2)
 (gplt-open-window 3)
-(lwp (lambda () (apply-painter 1 clw 4096 4096) (lwp-exit)))
-(lwp (lambda () (apply-painter 2 csx 4096 4096) (lwp-exit)))
-(lwp (lambda () (apply-painter 3 sqw 4096 4096) (lwp-exit)))
+(lwp (lambda () (apply-painter 1 clw 4096 4096) ))
+(lwp (lambda () (apply-painter 2 csx 4096 4096) ))
+(lwp (lambda () (apply-painter 3 sqw 4096 4096) ))
 (lwp-start)
 (gplt-view 3)
 (gplt-view 2)
@@ -130,8 +128,8 @@ but we will show you normal version first.")
                                 (make-vect 1.0 0.0)
                                 (make-vect 0.5 1.0))))
         (lambda (frame)
-          (lwp (lambda () (paint-left  frame) (lwp-exit)))
-          (lwp (lambda () (paint-right frame) (lwp-exit)))
+          (lwp (lambda () (paint-left  frame) ))
+          (lwp (lambda () (paint-right frame) ))
   	))))
 
   (define (below painter1 painter2)
@@ -147,8 +145,8 @@ but we will show you normal version first.")
                                 (make-vect 1.0 0.5)
                                 (make-vect 0.0 1.0))))
         (lambda (frame)
-	  (lwp (lambda () (paint-below frame) (lwp-exit)))
-	  (lwp (lambda () (paint-above frame) (lwp-exit)))
+	  (lwp (lambda () (paint-below frame) ))
+	  (lwp (lambda () (paint-above frame) ))
   	))))
 
 ;;;
