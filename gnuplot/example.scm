@@ -19,7 +19,7 @@
 
 (define (pict-open-gp file)
   (if *interactive*
-      (gplt-open-graphics (open-output-process-port "telnet localhost 5055 > /dev/null 2>&1"))
+      (gplt-open-graphics)
       (gplt-open-graphics file)))
 
 (define (pict-close-gp)
@@ -32,8 +32,8 @@
         (flush (current-output-port))
         (read-byte))))
 
-(define (pict-sleep . n)
-  (if *interactive* (sys-sleep 2)))
+(define (pict-sleep n)
+  (if *interactive* (sys-sleep n)))
 
 (define (pict-mess mess)
   (if *interactive*
@@ -94,7 +94,7 @@ Please open Gplt.app (mac) or run ./plot_glut (others) in background.")
 (gplt-clear-window 1)
 (gplt-clear-window 2)
 (gplt-clear-window 3)
-(pict-sleep 2) ;;; wait for the window clear
+(pict-sleep 1) ;;; wait for the window clear
 (pict-close-gp)
 
 ;;;

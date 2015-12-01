@@ -108,17 +108,13 @@
 
 (define (already-opened?) *gp*)
 
-(define plot-command (cond 
-                      ((file-exists? "/usr/local/bin/comm_plot_glut")
-                       "/usr/local/bin/comm_plot_glut")
-                      ((file-exists? "/usr/local/bin/plot_glut")
-                       "/usr/local/bin/plot_glut")
-                      ((file-exists? "/usr/local/bin/gnuplot_x11")
-                       "gnuplot_x11 -geometry 400x400")
-                      ((file-exists? "/usr/X11R6/bin/gnuplot_x11")
-                       "gnuplot_x11 -geometry 400x400")
-                      (else
-                       (error "Could not find plot helper command\n"))))
+(define plot-command "telnet localhost 5055 > /dev/null 2>&1")
+
+(define plot-commold '("/usr/local/bin/comm_plot_glut"
+                       "/usr/local/bin/plot_glut"
+                       "gnuplot_x11 -geometry 400x400"
+                       "gnuplot_x11 -geometry 400x400"
+                       "telnet localhost 5055 > /dev/null 2>&1"))
 
 (define (gplt-open-graphics . rest)
   (or (already-opened?)
