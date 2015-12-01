@@ -1,7 +1,0 @@
-#!/bin/sh
-
-if [ -x /usr/bin/open -a -d $HOME/Applications/Gplt.app ]; then
-   open $HOME/Applications/Gplt.app
-fi
-telnet localhost 5055 > /dev/null 2>&1
-
