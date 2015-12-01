@@ -31,7 +31,7 @@ plot_glut : plot_glut.o
 	$(CC) $(CFLAGS) -o plot_glut $(GLUTLIBS) plot_glut.c
 
 clean :
-	rm -f *.o *.gp plot_glut Gplt.app/Contents/MacOS/Gplt
+	rm -f *.o *.gp Makefile VERSION config.log ggc.skimu.gnuplot.gpd plot_glut Gplt.app/Contents/MacOS/Gplt
 
 app : Gplt.app/Contents/MacOS/Gplt
 
