@@ -1,9 +1,6 @@
-#  $Id: README,v 1.2 2002/11/28 04:36:50 skimu Exp $
-
 Gplt.app                --  MacOSX application
 Makefile                --  Recipe
 README                  --  This file
-comm_plot_glut*         --  helper shell script for MacOSX
 example.scm		--  draw recursive patterns.
 gnuplot.scm		--  Gauche module
 gnuplot_x11s.diff       --  Patch for gplt_x11.c relative to gnuplot-3.7.
