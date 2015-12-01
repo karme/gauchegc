@@ -54,6 +54,7 @@ Please open Gplt.app (mac) or run ./plot_glut (others) in background.")
 	 (x2 (xcor-vect p2))
 	 (y2 (ycor-vect p2)))
     (lwp-pause)
+    #;(sys-nanosleep 2000000) ; in case your machine is too fast.
     (gplt-draw-line w
 		    (round->exact x1)
 		    (round->exact y1)
