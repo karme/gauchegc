@@ -13,5 +13,5 @@ grad :
 	gosh gradimage.scm gauss.jpg gaussd.jpg
 
 clean :
-	rm -f *.png *.jpg
+	rm -f *.png *.jpg *.gif
 
