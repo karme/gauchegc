@@ -1,6 +1,7 @@
-;;; SICP painter
+;;; SICP picture language
 
 ;;  implementation of vector
+
 (define xcor-vect car)
 (define ycor-vect cdr)
 (define make-vect cons)
@@ -221,9 +222,9 @@
   (lambda (frame)
     (for-each (lambda (painter) (painter frame)) painters)))
 
-;;;
-;;; fractal transformation.
-;;;
+
+;; fractal transformation.
+
 (define ir2  (/ 1 (sqrt 2)))
 (define ir3  (/ 1 (sqrt 3)))
 (define pi/6 (/ pi 6))
@@ -231,29 +232,15 @@
 (define (dragon painter n)
   (if (= n 0)
       painter
-      (let ((f1 (scale (rotate painter pi/4) ir2))
-            (f2 (shift (scale (rotate (shift painter 
-                                             (make-vect -1.0 0.0))
-                                      pi/4)
-                              ir2)
+      (let ((f1 (scale (rotate painter (- pi/4)) ir2))
+            (f2 (shift (scale (rotate (scale2 painter -1 -1) pi/4) ir2)
                        (make-vect 1.0 0.0))))
-        (dragon (compose-painter f1 f2) (- n 1)))))
-
-(define (dragon0 painter n)
-  (if (= n 0)
-      painter
-      (let* ((f1 (rotate painter pi/4))
-             (f1 (scale f1 ir2))
-             (f2 (shift painter (make-vect -1.0 0.0)))
-             (f2 (rotate f2 pi/4))
-             (f2 (scale  f2 ir2))
-             (f2 (shift  f2 (make-vect 1.0 0.0))))
         (dragon (compose-painter f1 f2) (- n 1)))))
 
 (define (levy painter n)
   (if (= n 0)
       painter
-      (let ((f1 (scale (rotate (scale2 painter 1 -1) pi/4) ir2))
+      (let ((f1 (scale (rotate painter (- pi/4)) ir2))
             (f2 (shift (scale (rotate (shift painter 
                                              (make-vect -1.0 0.0))
                                       pi/4)
@@ -274,6 +261,7 @@
 
 
 ;; painter
+
 (define (x-mark frame)
   (let ((tl (make-vect 0 1))
 	(tr (make-vect 1 1))

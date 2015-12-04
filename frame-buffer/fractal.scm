@@ -24,13 +24,12 @@
     (save-frame-buffer-as-png-file fb filename)
     ))
 
-(define dragon (dragon point 10))
-(define koch   (koch   simple-segment 9))
-(define levy   (levy   point 12))
-
-(time (draw-painter (shift (scale dragon 0.5) (make-vect 0.25 0.50)) 400 400 "dragon.png"))
-(time (draw-painter (shift koch               (make-vect 0.00 0.50)) 400 400 "koch.png"))
-(time (draw-painter (shift (scale levy   0.6) (make-vect 0.12 0.45)) 400 400 "levy.png"))
+(let ((d (dragon simple-segment 10))
+      (k (koch   simple-segment 8))
+      (l (levy   simple-segment 12)))
+  (time (draw-painter (shift (scale d 0.6) (make-vect 0.25 0.60)) 400 400 "dragon.png"))
+  (time (draw-painter (shift k             (make-vect 0.00 0.50)) 400 400 "koch.png"))
+  (time (draw-painter (shift (scale l 0.5) (make-vect 0.25 0.65)) 400 400 "levy.png")))
 
 (exit 0)
 ;;;
