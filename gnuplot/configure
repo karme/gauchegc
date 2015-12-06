@@ -48,18 +48,8 @@ You need a space in front of `-l', otherwise you'll get an error.")
 (cf-subst 'GAUCHE_PKGLIBDIR  (gauche-config "--pkglibdir"))
 (cf-subst 'GAUCHE_PKGARCHDIR (gauche-config "--pkgarchdir"))
 
+;; In case we need more than this, use parse-target-triplet in numerical.lapack.
 (define (arch~ x) (string-scan (gauche-architecture) x))
-
-(define (os-version . str)
-  (if (null? str)
-      (os-version (gauche-architecture))
-      (cond ((rxmatch->string #/\d+(\.\d+)*$/ (car str))
-             => (lambda (str)
-                  (map x->number (string-split str #\.))))
-            (else #f))))
-
-(define (version-major ver) (list-ref ver 0))
-(define (version-minor ver) (list-ref ver 1))
 
 (if (not (cf-have-subst? 'GLUTLIBS))
     (cond ((arch~ "darwin") (cf-subst 'GLUTLIBS " -framework GLUT -framework OpenGL"))
