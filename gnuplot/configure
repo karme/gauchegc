@@ -54,7 +54,7 @@ You need a space in front of `-l', otherwise you'll get an error.")
 (unless (cf-have-subst? 'GLUTLIBS)
   (rxmatch-case (gauche-architecture)
     (#/-darwin/ (#f) (cf-subst 'GLUTLIBS " -framework GLUT -framework OpenGL"))
-    (#-linux/   (#f) (cf-subst 'GLUTLIBS "-lglut"))
+    (#/-linux/  (#f) (cf-subst 'GLUTLIBS "-lglut"))
     (else            (cf-subst 'GLUTLIBS "-lglut"))))
 
 ;; Output
