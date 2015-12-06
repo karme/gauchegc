@@ -55,53 +55,18 @@ You need a space in front of `-L', otherwise you'll get an error.")
 (cf-subst 'GAUCHE_PKGLIBDIR  (gauche-config "--pkglibdir"))
 (cf-subst 'GAUCHE_PKGARCHDIR (gauche-config "--pkgarchdir"))
 
-;;;
-;;; target-triplet : cpu-vendor-os where os can be kernel-system
-;;; https://www.gnu.org/software/autoconf/manual/autoconf-2.69/html_node/Specifying-Target-Triplets.html
-;;;
-(use srfi-11) ; let*-values
-
-(define (parse-target-triplet str)
-  (let*-values (((cpu   str) (string-scan str #\- 'both))
-                ((vendor os) (string-scan str #\- 'both)))
-    (let ((version (cond ((rxmatch->string #/\d+(\.\d+)*$/ os)
-                          => (lambda (v)
-                               (map x->number (string-split v #\.))))
-                         (else #f))))
-      (list :cpu cpu :vendor vendor :os os :version version))))
-
-(define (version-number target-kv n)
-  (cond ((get-keyword :version target-kv)
-         => (lambda (v) (list-ref v n)))
-        (else #f)))
-
-;;; TEST
-;(parse-target-triplet "x86_64-apple-darwin15.0.0")
-; => (:cpu "x86_64" :vendor "apple" :os "darwin15.0.0" :version (15 0 0))
-;(parse-target-triplet "i686-pc-linux-gnu")
-; => (:cpu "i686" :vendor "pc" :os "linux-gnu" :version #f)
-
-;;;
-;;;
-;;;
+;;
+;;
+;;
 (unless (cf-have-subst? 'LAPACKLIBS)
-
-  (let ((target (parse-target-triplet (gauche-architecture))))
-
-    (define (os~ str) (string-scan (get-keyword :os target) str))
-    (define (version-major) (version-number target 0))
-    (define (version-minor) (version-number target 1))
-    (define (version-patch) (version-number target 2))
-
-    (cond ((os~ "darwin")
-           (cond ((>= (version-major) 15) (cf-subst 'LAPACKLIBS "-framework Accelerate"))
-                 (else                    (cf-subst 'LAPACKLIBS "-framework veclib"))))
-          ((os~ "netbsd1.6") (cf-subst 'LAPACKLIBS "-Wl,-rpath /usr/pkg/lib -L/usr/pkg/lib -llapack -lblas -lg2c"))
-          ((os~ "solaris2")  (cf-subst 'LAPACKLIBS "-L/usr/local/lib -llapack -lblas"))
-          ((os~ "linux")     (cf-subst 'LAPACKLIBS "-Wl,-rpath /apps/free/lapack/3.4.2/lib -L/apps/free/lapack/3.4.2/lib -llapack -lblas"))
-          (else              (cf-subst 'LAPACKLIBS "-llapack -lblas")))
-
-    ))
+  (rxmatch-case (gauche-architecture)
+    (#/-darwin(\d+)\./ (#f major)
+       (cond ((>= (x->integer major) 15) (cf-subst 'LAPACKLIBS "-framework Accelerate"))
+             (else                       (cf-subst 'LAPACKLIBS "-framework veclib"))))
+    (#/-linux/    (#f) (cf-subst 'LAPACKLIBS "-Wl,-rpath /apps/free/lapack/3.4.2/lib -L/apps/free/lapack/3.4.2/lib -llapack -lblas"))
+    (#/-netbsd/   (#f) (cf-subst 'LAPACKLIBS "-Wl,-rpath /usr/pkg/lib -L/usr/pkg/lib -llapack -lblas -lg2c"))
+    (#/-solaris2/ (#f) (cf-subst 'LAPACKLIBS "-L/usr/local/lib -llapack -lblas"))
+    (else              (cf-subst 'LAPACKLIBS "-llapack -lblas"))))
 
 ;; Output
 (cf-make-gpd)
