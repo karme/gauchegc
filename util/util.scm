@@ -43,15 +43,14 @@
 
 (define (with-temporary-file writer reader)
   (receive (port file) (sys-mkstemp wtf-tmpl)
-    (dynamic-wind
-     (lambda () #f)
-     (lambda () 
-       (writer port)
-       (close-output-port port)
-       (reader file))
-     (lambda ()
-       (if (not (port-closed? port))
-           (close-output-port port))
+    (unwind-protect
+        (begin
+          (writer port)
+          (close-output-port port)
+          (reader file))
+      (lambda ()
+       (unless (port-closed? port)
+         (close-port port))
        (sys-unlink file)))))
 
 ;;;
