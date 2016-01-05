@@ -1,2 +1,6 @@
+Makefile
+VERSION
+*.log
+*.gpd
 plot_glut
 *.o
