@@ -1,6 +1,7 @@
 (define-module ggc.skimu.frame-buffer
   (use gauche.uvector)
   (use gauche.process)
+  (use ggc.util) ; with-temporary-file
   (export make-frame-buffer
 	  read-ppm
 	  write-ppm
@@ -206,19 +207,14 @@ NEW real    1m3.611s user    0m58.380s sys     0m0.630s
       "xv ~a &"))     ; Others (X11)
 
 (define (fb-view fb)
-  (let ((pngname (string-append "fbv"
-				(number->string 
-				 (sys-random))
-				".png")))
-    (dynamic-wind 
-	(lambda () #t)
-	(lambda ()
-	  (save-frame-buffer-as-png-file fb pngname)
-	  (sys-system (format #f fb-view-command pngname))
-	  (sys-sleep 2))
-	(lambda ()
-	  (and (file-exists? pngname)
-	       (sys-remove pngname))))))
+  (let ((pngname (string-append (sys-tmpnam) ".png")))
+    (unwind-protect
+        (begin
+          (save-frame-buffer-as-png-file fb pngname)
+          (sys-system (format #f fb-view-command pngname))
+          (sys-sleep 2))
+      (and (file-exists? pngname)
+           (sys-unlink pngname)))))
 
 (provide "ggc/skimu/frame-buffer")
 
