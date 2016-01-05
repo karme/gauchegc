@@ -12,7 +12,6 @@
   (display "hello, world")
   (newline))
 
-;;
 ;; return value of function ``hello'' is the value returned
 ;; by ``newline'' which is always #<undef>.
 
@@ -36,6 +35,6 @@
              (last  (lambda ()
                       (print "last")
                       (+ 3 4))))
-      start))))    ;;; foofo
+      start))))
 
-; EOF
+;; EOF

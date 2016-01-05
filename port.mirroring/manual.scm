@@ -28,7 +28,7 @@
 ;;; Function: open-mirroring-input src dest
 ;;;
 ;;;   open a mirroing-input whose source input-port is src,
-;;;   and destination output-port is out.
+;;;   and destination output-port is dest.
 ;;;
 ;;;
 ;;; Function: call-with-mirroring-input src dest proc
@@ -60,22 +60,22 @@
 (use ggc.port.mirroring)
 
 (define (mountain)
-  (display "hello, I am mountain. I echo what I hear")
+  (display " hello, I am mountain. I echo what I hear")
   (newline)
-  (display "What do you say?: ")
+  (display " What do you say?: ")
   (flush)
   (let loop ((l (read-line)))
     (if (eof-object? l)
         (begin
           (newline)
-          (display "No more? I miss you, bye bye.")
+          (display " No more? I'll miss you, bye bye.")
           (newline)
           "OK")
         (begin
-          (display "I say: ")
+          (display " I say: ")
           (write l)
           (newline)
-          (display "What do you say?: ")
+          (display " What do you say?: ")
           (flush)
           (loop (read-line))))))
 
