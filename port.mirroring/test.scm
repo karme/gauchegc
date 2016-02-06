@@ -51,7 +51,13 @@
                (print (port-current-line (current-input-port))) ; outs #\3 #\nl
                )))))
 
-(test-script "./gpsh")
+(use gauche.version)
+(when (version>? (gauche-version) "0.9.5_pre0")
+  ;;
+  ;; test-script was introduced, Feb 4 19:06:44 2016 -1000
+  ;;
+  (test-script "./gpsh"))
+
 
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
