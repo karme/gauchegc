@@ -71,7 +71,6 @@ uninstall :
 	$(INSTALL) -U $(GAUCHE_PKGLIBDIR)/.packages $(PACKAGE).gpd
 
 clean :
-	$(GAUCHE_PACKAGE) compile --clean scmxref $(scmxref_SRCS)
 	rm -rf core $(TARGET) $(GENERATED) *~ test.log so_locations *.txt
 
 distclean : clean
