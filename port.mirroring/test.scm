@@ -4,6 +4,8 @@
 (use ggc.port.mirroring)
 (test-module 'ggc.port.mirroring)
 
+(test-section "mirroring input")
+
 (test* "read one char" "a"
        (with-output-to-string
          (lambda ()
@@ -51,8 +53,19 @@
                (print (port-current-line (current-input-port))) ; outs #\3 #\nl
                )))))
 
+(test-section "mirroring output")
+
+(test* "mirroring output" "foo\n"
+       (with-output-to-string
+         (lambda ()
+           (with-output-to-port/mirroring-to-file
+               (current-output-port) "fo.txt"
+             (lambda ()
+               (print "foo"))))))
+
 (use gauche.version)
 (when (version>? (gauche-version) "0.9.5_pre0")
+  (test-section "gpsh")
   ;;
   ;; test-script was introduced, Feb 4 19:06:44 2016 -1000
   ;;

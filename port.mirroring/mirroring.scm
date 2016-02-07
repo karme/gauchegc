@@ -54,22 +54,22 @@
     (slot-set! mi 'seek seek)
     mi))
 
-(define (open-mirroring-output out dest-port)
+(define (open-mirroring-output out1 out2)
   (let ((mo (make <virtual-output-port>)))
     (define (putb b)
-      (write-byte b dest-port)
-      (write-byte b out))
+      (write-byte b out2)
+      (write-byte b out1))
     (define (putc c)
-      (write-char c dest-port)
-      (write-char c out))
+      (write-char c out2)
+      (write-char c out1))
     (define (puts str)
-      (display str dest-port)
-      (display str out))
+      (display str out2)
+      (display str out1))
     (define (flus)
-      (flush dest-port)
-      (flush out))
+      (flush out2)
+      (flush out1))
     (define (seek offset whence)
-      (port-seek out offset whence))
+      (port-seek out1 offset whence))
     (slot-set! mo 'putb  putb)
     (slot-set! mo 'putc  putc)
     (slot-set! mo 'puts  puts)
@@ -77,13 +77,20 @@
     (slot-set! mo 'seek  seek)
     mo))
 
-
+;;
 (define (call-with-mirroring-input port dest-port proc)
   (let1 p (open-mirroring-input port dest-port)
     (unwind-protect (proc p)
       (unless (port-closed? p)
         (close-port p)))))
 
+(define (call-with-mirroring-output out1 out2 proc)
+  (let1 p (open-mirroring-output out1 out2)
+    (unwind-protect (proc p)
+      (unless (port-closed? p)
+        (close-port p)))))
+
+;;
 (define (with-input-from-port/mirroring-to-port port dest-port thunk)
   (call-with-mirroring-input
       port dest-port
@@ -127,5 +134,18 @@
           (with-input-from-port/mirroring-to-port
               port dest-port
             thunk))))))
+
+;;
+(define (with-output-to-port/mirroring-to-port out1 out2 thunk)
+  (call-with-mirroring-output
+      out1 out2
+    (lambda (p) (with-output-to-port p thunk))))
+
+(define (with-output-to-port/mirroring-to-file port dest-file thunk)
+  (call-with-output-file dest-file
+    (lambda (dest-port)
+      (with-output-to-port/mirroring-to-port
+          port dest-port
+        thunk))))
 
 (provide "ggc/port/mirroring")
