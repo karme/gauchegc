@@ -2,17 +2,40 @@
 ;;;
 ;;;
 (define-module ggc.util
-  (export pie inexact-split pianissimo  myread
+  (export direct-product
+          direct-product-for-each
+          for-all
+          pie %f %w
+          pianissimo myread
           with-temporary-file
           retry-on-error
-          for-all
           )
 )
 (select-module ggc.util)
 
 ;;;
-;;; FOR-ALL proc list1 list2 ...
+;;;   direct-product
 ;;;
+;;;   NB: cartesian-product in util.combiations is basically
+;;;       same function with slightly different interface.
+;;;       cartesian-product-for-each does not have manual entry
+;;;       but it is in util.combinations.
+;;;
+(define (direct-product-for-each proc . params)
+  (if (null? params)
+      (proc)
+      (for-each (lambda (e)
+		  (apply direct-product-for-each (cut proc e <...>) (cdr params)))
+		(car params))))
+
+(define (direct-product proc . params)
+  (if (null? params)
+    (list (proc))
+    (append-map (lambda (e)
+                  (apply direct-product (cut proc e <...>) (cdr params)))
+                (car params))))
+
+;; for-all : depreciated. direct product is better name.
 (define (for-all proc . params)
   (if (null? params)
       (proc)
@@ -21,7 +44,7 @@
 		(car params))))
 
 ;;;
-;;; RETRY-ON-ERROR
+;;;   RETRY-ON-ERROR
 ;;;
 (define (retry-on-error interval count thunk)
   (define (retry e)
@@ -34,10 +57,10 @@
   (with-error-handler retry thunk))
 
 ;;;
-;;; WITH-TEMPORARY-FILE
+;;;   WITH-TEMPORARY-FILE
 ;;;
-;;; To change tempfile templete, do something like,
-;;; (with-module ggc.util (set! wtf-tmpl "/tmp/xxx"))
+;;;   To change tempfile templete, do something like,
+;;;   (with-module ggc.util (set! wtf-tmpl "/tmp/xxx"))
 ;;;
 (define wtf-tmpl "gomi")
 
@@ -48,10 +71,9 @@
           (writer port)
           (close-output-port port)
           (reader file))
-      (lambda ()
-       (unless (port-closed? port)
-         (close-port port))
-       (sys-unlink file)))))
+      (unless (port-closed? port)
+        (close-port port))
+      (sys-unlink file))))
 
 ;;;
 ;;; PIANISSIMO : A minimum pretty-print
@@ -81,25 +103,45 @@
   )
 
 ;;;
-;;; pie: print inexact number with n digits below decimal point.
+;;; pie: print inexact real number with n digits below decimal point.
 ;;;
 (define (inexact-split d n)
-  (define (p d n negative?)
+  (define (p d n neg?)
     (let* ((a (floor->exact d))
 	   (b (round->exact (* (- d a) (expt 10 n)))))
-      (cond ((= b (expt 10 n)) (values (+ a 1) 0 negative?))
+      (cond ((= b (expt 10 n)) (values (+ a 1) 0 neg?))
             ((> b (expt 10 n)) (error "something is wrong"))
-            (else              (values a b negative?)))))
-  (if (< d 0)
-      (p (- d) n #t)
-      (p d     n #f)))
+            (else              (values a b neg?)))))
+  (if (negative? d)
+    (p (- d) n #t)
+    (p d     n #f)))
 
-(define (pie d n)
-  (receive (a b negative?) (inexact-split d n)
-    (if negative? (display "-"))
+(define (pie d n :optional (positive-sign #f))
+  (receive (a b neg?) (inexact-split d n)
+    (if neg? (display #\-)
+        (if positive-sign
+          (display positive-sign)))
     (display a)
-    (display ".")
-    (format #t #"~~~|n|,'0d~~%" b)))
+    (display #\.)
+    (format #t "~v,'0d~%" n b)))
+
+;;;
+;;; %f and %w are useful in with string-interpolation syntax
+;;;
+;;; #"~(%f 3.141592 2)" =>  "3.14"
+;;; (let ((s "foo\n")) #"~(%w s)") => "\"foo\\n\""
+;;;
+(define (%f d n :optional (positive-sign #f))
+  (receive (a b neg?) (inexact-split d n)
+    (let ((ab (list (number->string a) "."
+                    (format "~v,'0d" n b))))
+      (apply string-append
+             (if neg? (cons "-" ab)
+                 (if positive-sign
+                   (cons (x->string positive-sign) ab)
+                   ab))))))
+
+(define (%w x) (with-output-to-string (lambda () (write x))))
 
 ;;;
 ;;; MYREAD :
