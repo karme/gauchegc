@@ -59,7 +59,7 @@ check :
 
 post-install-check : 
 	@rm -f test.log
-	$(GOSH) $(srcdir)/test.scm > test.log
+	gosh $(srcdir)/test.scm > test.log
 
 install : all
 	$(INSTALL) -m 755 -T $(BINDIR) $(COMMANDS)
