@@ -42,6 +42,7 @@
 
 (define-method port-current-column ((port <column-port>))
   (slot-ref port'column))
+(define-method port-current-column ((port <port>)) #f)
 
 ;; <virtual-input-port> takes care of this.
 #;(define-method port-current-line ((port <column-port>))
