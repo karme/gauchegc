@@ -48,16 +48,19 @@
 #;(define-method port-current-line ((port <column-port>))
       (slot-ref port'line))
 
-(define (call-with-input-file/column file proc)
-  (let*  ((s (open-input-file  file))
-          (p (open-column-port s)))
+(define (call-with-input-port/column s proc)
+  (let ((p (open-column-port s)))
     (unwind-protect (proc p)
-      (unless (port-closed? p) (close-port p))
-      (unless (port-closed? s) (close-port s)))))
+      (unless (port-closed? p) (close-port p)))))
 
-(define (with-input-from-file/column file thunk)
-  (call-with-input-file/column file
+(define (with-input-from-port/column s thunk)
+  (call-with-input-port/column s
     (lambda (p)
       (with-input-from-port p thunk))))
+
+(define (with-input-from-file/column file thunk)
+  (call-with-input-file file
+    (lambda (p)
+      (with-input-from-port/column p thunk))))
 
 (provide "ggc/port/column")
