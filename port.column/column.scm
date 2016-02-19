@@ -1,7 +1,10 @@
 ;;;
-;;;  column-port : linenumber and column aware port.
+;;;   column-port : linenumber and column aware port.
 ;;;
-
+;;;   point is same as point in Emacs. (point in between characters)
+;;;   column is relative point after newline, it become zero right after you read newline.
+;;;   line starts from 1. (The first line is line 1).
+;;;
 (define-module ggc.port.column
   (use gauche.vport)
   (export-all)
@@ -9,12 +12,13 @@
 (select-module ggc.port.column)
 
 (define-class <column-port> (<virtual-input-port>)
-  (src name #;line column last-column))
+  (src name point #;line column last-column))
 
 (define (open-column-port src-port)
   (let ((port (make  <column-port>)))
     (define (getc)
       (let ((c (read-char src-port)))
+        (inc! (slot-ref port'point))
         (cond ((eof-object? c) c)
               ((char=? #\nl c)
                #;(inc! (~ port'line))
@@ -33,6 +37,7 @@
     #;(slot-set! port 'line
                (let ((x (port-current-line src-port)))
                  (if (negative? x) 1 x)))
+    (slot-set! port 'point  0)
     (slot-set! port 'column 0)
     (slot-set! port 'last-column 0)
     (slot-set! port 'getc   getc)
@@ -41,6 +46,11 @@
 
 (define-method port-name ((port <column-port>))
   (slot-ref port'name))
+
+(define-method port-current-point ((port <column-port>))
+  (- (slot-ref port'point)
+     (length ((with-module gauche.internal %port-ungotten-chars) port))))
+(define-method port-current-point ((port <port>)) #f)
 
 (define-method port-current-column ((port <column-port>))
   (let ((cc ((with-module gauche.internal %port-ungotten-chars) port)))
@@ -51,7 +61,6 @@
              (- (slot-ref port'column) 1)))
       (else
        (error "port-current-column: unsupported gauche version")))))
-
 (define-method port-current-column ((port <port>)) #f)
 
 (define (port-current-line$ port)
