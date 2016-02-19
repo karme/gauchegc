@@ -13,11 +13,11 @@
                  (unwind-protect
                      (begin
                        (print (port-name port))
-                       (print (port-current-line port))
+                       (print (port-current-line$ port))
                        (print (port-current-column port))
                        (let ((ch (read-char port)))
                          (cond ((char=? #\a ch)
-                                (print (port-current-line port))
+                                (print (port-current-line$ port))
                                 (print (port-current-column port)))
                                (else (error "read wrong char" ch)))))
                    (unless (port-closed? port)
@@ -32,12 +32,12 @@
                  (unwind-protect
                      (let ((l (read-line port)))
                        (cond ((string=? l "abracadabra")
-                              (print (port-current-line port))
+                              (print (port-current-line$ port))
                               (print (port-current-column port)))
                              (else (error "read wrong string")))
                        (let ((ch (read-char port)))
                          (cond ((char=? #\1 ch)
-                                (print (port-current-line port))
+                                (print (port-current-line$ port))
                                 (print (port-current-column port)))
                                (else (error "read wrong char" ch)))))
                    (unless (port-closed? port)
@@ -56,26 +56,26 @@
 
                      ;;  foo.txt 1 0
                      (print (port-name (current-input-port)))
-                     (print (port-current-line (current-input-port)))
+                     (print (port-current-line$ (current-input-port)))
                      (print (port-current-column (current-input-port)))
 
                      ;;  1 1
                      (let ((ch (read-char)))
                        (cond ((char=? #\a ch)
-                              (print (port-current-line (current-input-port)))
+                              (print (port-current-line$ (current-input-port)))
                               (print (port-current-column (current-input-port))))
                              (else (error "read wrong char" ch))))
                      ;;  2 0
                      (let ((l (read-line)))
                        (cond ((string=? l "bracadabra")
-                              (print (port-current-line (current-input-port)))
+                              (print (port-current-line$ (current-input-port)))
                               (print (port-current-column (current-input-port))))
                              (else (error "read wrong string"))))
 
                      ;;  2 1
                      (let ((ch (read-char)))
                        (cond ((char=? #\1 ch)
-                              (print (port-current-line (current-input-port)))
+                              (print (port-current-line$ (current-input-port)))
                               (print (port-current-column (current-input-port))))
                              (else (error "read wrong char" ch)))))))
              (sys-unlink "foo.txt")))))
@@ -122,7 +122,7 @@
            (count 1))
     (cond  ((eof-object? ch)
             (= count
-               (port-current-line (current-input-port))))
+               (port-current-line$ (current-input-port))))
            ((char=? #\newline ch)
             (write-char ch)
             (lp (read-char) (+ count 1)))
