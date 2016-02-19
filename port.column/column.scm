@@ -50,19 +50,25 @@
              (slot-ref port'last-column)
              (- (slot-ref port'column) 1)))
       (else
-       (error "Unsupported gauche version")))))
-          
+       (error "port-current-column: unsupported gauche version")))))
+
 (define-method port-current-column ((port <port>)) #f)
 
 (define (port-current-line$ port)
-  (let ((cc ((with-module gauche.internal %port-ungotten-chars) port)))
-    (case (length cc)
-      ((0) (port-current-line port))
-      ((1) (if (char=? #\newline (car cc))
-             (- (port-current-line port) 1)
-             (port-current-line port)))
-      (else
-       (error "Unsupported gauche version")))))
+  (let ((ln (port-current-line port)))
+    (if (negative? ln)
+      ln
+      (let ((cc ((with-module gauche.internal %port-ungotten-chars) port)))
+        (case (length cc)
+          ((0) ln)
+          ((1) (if (char=? #\newline (car cc))
+                 (- ln 1)
+                 ln))
+          (else
+           (error "port-current-line$ : unsupported gauche version")
+           ;; or this may work....
+           #;(- ln (length (filter (cut char=? #\newline) cc)))
+           ))))))
 
 ;; <virtual-input-port> takes care of this.
 #;(define-method port-current-line ((port <column-port>))
