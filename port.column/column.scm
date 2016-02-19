@@ -9,7 +9,7 @@
 (select-module ggc.port.column)
 
 (define-class <column-port> (<virtual-input-port>)
-  (src name #;line column))
+  (src name #;line column last-column))
 
 (define (open-column-port src-port)
   (let ((port (make  <column-port>)))
@@ -18,6 +18,7 @@
         (cond ((eof-object? c) c)
               ((char=? #\nl c)
                #;(inc! (~ port'line))
+               (set! (~ port'last-column) (~ port'column))
                (set! (~ port'column) 0)
                c)
               (else
@@ -33,6 +34,7 @@
                (let ((x (port-current-line src-port)))
                  (if (negative? x) 1 x)))
     (slot-set! port 'column 0)
+    (slot-set! port 'last-column 0)
     (slot-set! port 'getc   getc)
     (slot-set! port 'ready  ready)
     port))
@@ -41,8 +43,26 @@
   (slot-ref port'name))
 
 (define-method port-current-column ((port <column-port>))
-  (slot-ref port'column))
+  (let ((cc ((with-module gauche.internal %port-ungotten-chars) port)))
+    (case (length cc)
+      ((0) (slot-ref port'column))
+      ((1) (if (char=? #\newline (car cc))
+             (slot-ref port'last-column)
+             (- (slot-ref port'column) 1)))
+      (else
+       (error "Unsupported gauche version")))))
+          
 (define-method port-current-column ((port <port>)) #f)
+
+(define (port-current-line$ port)
+  (let ((cc ((with-module gauche.internal %port-ungotten-chars) port)))
+    (case (length cc)
+      ((0) (port-current-line port))
+      ((1) (if (char=? #\newline (car cc))
+             (- (port-current-line port) 1)
+             (port-current-line port)))
+      (else
+       (error "Unsupported gauche version")))))
 
 ;; <virtual-input-port> takes care of this.
 #;(define-method port-current-line ((port <column-port>))

@@ -80,6 +80,26 @@
                              (else (error "read wrong char" ch)))))))
              (sys-unlink "foo.txt")))))
 
+(test* "peek-char" "1\n8\n2\n0\n"
+       (with-output-to-string
+         (lambda ()
+           (with-input-from-string "12345678\n1234567890\n"
+             (lambda ()
+               (with-input-from-port/column (current-input-port)
+                 (lambda ()
+                   (let lp ((ch (peek-char)))
+                     (cond ((eof-object? ch) (error "something went wrong"))
+                           ((char=? #\newline ch)
+                            (print (port-current-line$ (current-input-port)))  ; 1
+                            (print (port-current-column (current-input-port))) ; 8
+                            (read-char) ; #\newline
+                            (print (port-current-line$ (current-input-port)))  ; 2
+                            (print (port-current-column (current-input-port))) ; 0
+                            )
+                           (else
+                            (read-char)
+                            (lp (peek-char))))))))))))
+
 (test-section "bench mark: copy /usr/share/dict/words to /dev/null")
 (use gauche.time)
 (use file.util)
