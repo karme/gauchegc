@@ -49,7 +49,7 @@
                                       (imag-part x)))
                               lis)))
 
-(define (z64vector->list v :optional (start 0) (end (z64-vector-length v)))
+(define (z64vector->list v :optional (start 0) (end (z64vector-length v)))
   (if (>= start end) (error "invalid start and end" start end))
   (let lp ((i start) (r '()))
     (if (= i end)
@@ -120,8 +120,7 @@
       (error "invalid input."))
     (let ((info (zgesv N 1 A N IPIV B N)))
       (if (= info 0)
-        (values (z64vector->list B)
-                (s32vector->list IPIV))
+        (z64vector->list B)
         (errorf "ZGESV returned non-zero INFO (~a)" info)))))
 
 (provide "ggc/numerical/lapack")
