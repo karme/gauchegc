@@ -4,7 +4,13 @@
 "
 #include \"gauche/uvector.h\"
 extern int dgels_();
+extern int zgels_();
+extern int dgesv_();
+extern int zgesv_();
 #define DGELS dgels_
+#define ZGELS zgels_
+#define DGESV dgesv_
+#define ZGESV zgesv_
 "
 ;;;
 ;;;
@@ -18,14 +24,66 @@ extern int dgels_();
                      A::<f64vector> LDA::<int>
                      B::<f64vector> LDB::<int>
                      W::<f64vector> LW::<int>)
-   (body <int>                     
+   (body <int>
 "
    char TT;
     TT=T;
-    DGELS(&TT, &M, &N, &NRHS, 
-          SCM_UVECTOR_ELEMENTS(A), &LDA, 
-          SCM_UVECTOR_ELEMENTS(B), &LDB, 
+    DGELS(&TT, &M, &N, &NRHS,
+          SCM_UVECTOR_ELEMENTS(A), &LDA,
+          SCM_UVECTOR_ELEMENTS(B), &LDB,
           SCM_UVECTOR_ELEMENTS(W), &LW, &SCM_RESULT);
+"
+   ))
+
+;;;
+;;;
+;;;
+(define-cproc zgels (T::<char> M::<int> N::<int> NRHS::<int>
+                     A::<f64vector> LDA::<int>
+                     B::<f64vector> LDB::<int>
+                     W::<f64vector> LW::<int>)
+   (body <int>
+"
+   char TT;
+    TT=T;
+    ZGELS(&TT, &M, &N, &NRHS,
+          SCM_UVECTOR_ELEMENTS(A), &LDA,
+          SCM_UVECTOR_ELEMENTS(B), &LDB,
+          SCM_UVECTOR_ELEMENTS(W), &LW, &SCM_RESULT);
+"
+   ))
+
+;;;
+;;;
+;;;
+(define-cproc dgesv (N::<int> NRHS::<int>
+                     A::<f64vector> LDA::<int>
+                     IPIV::<s32vector>
+                     B::<f64vector> LDB::<int>)
+   (body <int>
+"
+   DGESV(&N, &NRHS,
+         SCM_UVECTOR_ELEMENTS(A), &LDA,
+         SCM_UVECTOR_ELEMENTS(IPIV),
+         SCM_UVECTOR_ELEMENTS(B), &LDB,
+         &SCM_RESULT);
+"
+   ))
+
+;;;
+;;;
+;;;
+(define-cproc zgesv (N::<int> NRHS::<int>
+                     A::<f64vector> LDA::<int>
+                     IPIV::<s32vector>
+                     B::<f64vector> LDB::<int>)
+   (body <int>
+"
+   ZGESV(&N, &NRHS,
+         SCM_UVECTOR_ELEMENTS(A), &LDA,
+         SCM_UVECTOR_ELEMENTS(IPIV),
+         SCM_UVECTOR_ELEMENTS(B), &LDB,
+         &SCM_RESULT);
 "
    ))
 
