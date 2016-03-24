@@ -111,7 +111,7 @@
 ;;;  A list of complex, NxN elements.
 ;;;  B list of complex, N elements.
 ;;;
-(define (call-dgesv lisA lisB)
+(define (call-zgesv lisA lisB)
   (let* ((A    (list->z64vector lisA))
          (B    (list->z64vector lisB))
          (N    (z64vector-length B))
