@@ -67,6 +67,16 @@
     (f64vector-set! v n (real-part x))
     (f64vector-set! v (+ n 1) (imag-part x))))
 
+(define (z64array-transpose A N)
+  (if (not (= (z64vector-length A) (* N N)))
+    (error "length of A is not N^2"))
+  (let ((A* (make-z64vector (z64vector-length A))))
+    (do ((i 0 (+ i 1)))
+        ((= i N) A*)
+      (do ((j 0 (+ j 1)))
+          ((= j N) #t)
+        (z64vector-set! A* (+ (* j N) i)
+                        (z64vector-ref A (+ (* i N) j)))))))
 ;;;
 ;;;
 (define (zpolyNfit N xlis ylis)
@@ -108,7 +118,7 @@
         (errorf "DGESV returned non-zero INFO (~a)" info)))))
 
 ;;;
-;;;  A list of complex, NxN elements.
+;;;  A list of complex, NxN elements. (A11 A21 A31 ... AN1 A12 A22 A32 ... AN2 .... ANN)
 ;;;  B list of complex, N elements.
 ;;;
 (define (call-zgesv lisA lisB)
