@@ -5,9 +5,7 @@
 (use srfi-19)
 
 (define (time-difference-s t2 t1)
-  (let1 d (time-difference t2 t1)
-    (+ (time-second d)
-       (/ (time-nanosecond d) 1e9))))
+  (time->seconds (time-difference t2 t1)))
 
 (define (ping size)
   (let ((s (make-string size #\x))
