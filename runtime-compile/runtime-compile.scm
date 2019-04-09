@@ -67,20 +67,7 @@
 
 ;; todo: name is somewhat misleading/ambiguous / should be in file.util?
 (define (with-temporary-directory thunk)
-  (define (mk-random-tmpdir)
-    (let loop ((try 0))
-      (guard (e
-              [(<system-error> e)
-               (if (< try 10000)
-                 (loop (+ try 1))
-                 (raise e))])
-             (let1 r (string-append (temporary-directory)
-                                    "/grtc" ;; todo: add pattern keyword
-                                    (random-string))
-               (sys-mkdir r #o0700)
-               r))))
-  
-  (let1 dir (mk-random-tmpdir)
+  (let1 dir (sys-mkdtemp (string-append (temporary-directory) "/grtc"))
     (unwind-protect
      (thunk dir)
      (guard (e
