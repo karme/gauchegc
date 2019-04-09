@@ -39,7 +39,7 @@
   (use math.const)
   (export earth-sphere-radius
           deg->rad
-          rad-deg
+          rad->deg
           spherical->cartesian
           cartesian->spherical
           great-circle-distance
