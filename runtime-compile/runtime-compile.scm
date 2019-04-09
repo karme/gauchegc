@@ -118,6 +118,9 @@
   (with-temporary-directory
    (lambda(tmpdir)
      ;; todo: really change to that directory?! likely bad idea
+     ;; note: didn't manage to tell cgen-precompile to put the c-file
+     ;; into different directory
+     ;; (at some point sys-basename is used on file named passed via :out.c)
      (with-current-directory
       tmpdir
       (lambda()
