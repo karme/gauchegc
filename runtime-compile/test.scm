@@ -47,13 +47,13 @@
 ;; todo: fragile
 (test* "timed"
        #t
-       (< (* 1.5 (timed
+       (< (* 1.1 (timed
                   (lambda()
-                    (dotimes (i 1000000)
+                    (dotimes (i 10000000)
                       (norm-2c 1. 1. 2. 2.)))))
           (timed
            (lambda()
-             (dotimes (i 1000000)
+             (dotimes (i 10000000)
                (norm-2  1. 1. 2. 2.))))))
 
 (test* "cise-compile-and-load"
