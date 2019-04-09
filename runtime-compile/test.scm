@@ -1,6 +1,6 @@
 #!/bin/sh
 #| -*- mode: scheme; coding: utf-8; -*- |#
-:; exec gosh -I. -- $0 "$@"
+:; exec gosh -- $0 "$@"
 (use gauche.test)
 (use gauche.time)
 (use gauche.uvector)
