@@ -233,7 +233,7 @@
                  [else
                   pid]))))))
 
-(ifdef (version>=? (gauche-version) "0.9.1")
+(ifdef (and (version>=? (gauche-version) "0.9.1") (version<=? (gauche-version) "0.9.4"))
        ;; based on and very similar to %run-process-new
        (define (fork-process thunk . args)
          (let-keywords* args ((input  #f) (output #f) (error  #f)
@@ -269,4 +269,43 @@
                    ;; the following expr waits until the child exits
                    (set! (ref proc 'status) (values-ref (sys-waitpid pid) 1))
                    (update! (ref proc 'processes) (cut delete proc <>)))
+                 proc))))))
+
+(ifdef (version>=? (gauche-version) "0.9.5")
+       ;; based on and very similar to %run-process-new
+       (define (fork-process thunk . args)
+         (let-keywords* args ((input  #f) (output #f) (error  #f)
+                              (redirects '())
+                              (wait   #f)
+                              (sigmask #f) (directory #f) (detached #f))
+           (let* ([redirs (%canon-redirects redirects input output error)]
+                  ;; todo
+                  [argv (with-module user *argv*)]
+                  [proc (make <process>
+                          ;; todo
+                          :command (with-module user *program-name*))]
+                  [dir  directory])
+             (%check-directory dir)
+             (receive (iomap toclose ipipes opipes tmpfiles)
+                 (if (pair? redirs)
+                   (%setup-iomap proc redirs)
+                   (values #f '() '() '() '()))
+               (set! (~ proc'in-pipes) ipipes)
+               (set! (~ proc'out-pipes) opipes)
+               (let1 pid (sys-fork-and-call thunk
+                                            :iomap iomap :directory dir
+                                            :sigmask (%ensure-mask sigmask)
+                                            :detached detached)
+                 (push! (ref proc 'processes) proc)
+                 (set!  (ref proc 'pid) pid)
+                 (dolist (p toclose)
+                   (if (input-port? p)
+                     (close-input-port p)
+                     (close-output-port p)))
+                 ;; note: detached and wait together don't work!
+                 (when (and wait (not detached))
+                   ;; the following expr waits until the child exits
+                   (set! (ref proc 'status) (values-ref (sys-waitpid pid) 1))
+                   (update! (ref proc 'processes) (cut delete proc <>))
+		   (for-each sys-unlink tmpfiles))
                  proc))))))
