@@ -21,7 +21,8 @@
 (define-module gc-hack
   (use runtime-compile)
   (export gc-set-warn-proc
-          gc-get-gc-no))
+          gc-get-gc-no
+	  gc-set-on-collection-event))
 
 (select-module gc-hack)
 
@@ -32,7 +33,12 @@
      "static ScmObj _callback;"
      "static void my_warn_proc(char *msg, GC_word arg) {"
      "Scm_ApplyRec2(_callback,SCM_MAKE_STR(msg),Scm_MakeIntegerU64(arg));"
-     "}")
+     "}"
+     "static ScmObj _event_callback;"
+     "static void my_event_proc(GC_EventType e) {"
+     "if (e==GC_EVENT_START) Scm_ApplyRec0(_event_callback);"
+     "}"
+     )
     (define-cproc gc-set-warn-proc (callback::<procedure>)
       (set! _callback (SCM_OBJ callback))
       (GC_set_warn_proc my_warn_proc))
@@ -40,8 +46,10 @@
       (result (SCM_MAKE_INT GC_gc_no))
       ;; newer gauche
       ;;(result (SCM_MAKE_INT (GC_call_with_alloc_lock (cast GC_fn_type GC_get_gc_no) 0)))
-      )))
- '(gc-set-warn-proc gc-get-gc-no))
-
-(define gc-set-warn-proc gc-set-warn-proc)
-(define gc-get-gc-no gc-get-gc-no)
+      )
+    (define-cproc gc-set-on-collection-event (callback::<procedure>)
+      (set! _event_callback (SCM_OBJ callback))
+      (GC_set_on_collection_event my_event_proc))
+    ))
+ '(gc-set-warn-proc gc-get-gc-no gc-set-on-collection-event)
+ :cppflags "-Wno-deprecated-declarations")

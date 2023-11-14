@@ -30,4 +30,16 @@
          (gc)
          (- (gc-get-gc-no) s)))
 
+(define *called* #f)
+(test* "gc called"
+       #t
+       (begin
+	 (gc-set-on-collection-event
+	  (lambda()
+	    (print "gc called")
+	    (set! *called* #t)
+	    (%vm-show-stack-trace (vm-get-stack-trace-lite))))
+	 (gc)
+	 *called*))
+
 (test-end)
